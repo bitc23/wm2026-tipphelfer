@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="de-CH">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WM 2026 · Tipp-Helfer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Hanken+Grotesk:wght@400;500;600;700&family=Spline+Sans+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0c0f0d; --card:#161c18; --card2:#1c2420; --line:#283129; --ink:#eef3ee; --muted:#8a978c; --muted2:#5e6a60;
+    --lime:#c6ff3a; --lime-dim:#9bc92b; --gold:#f2b441; --win:#62d27a; --draw:#d8c45a; --loss:#e8736b; --swiss:#ff3b3b;
+    --mono:'Spline Sans Mono',monospace; --disp:'Bricolage Grotesque',sans-serif; --body:'Hanken Grotesk',sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:var(--bg); color:var(--ink); font-family:var(--body); line-height:1.45; -webkit-font-smoothing:antialiased;
+    background-image:
+      radial-gradient(900px 500px at 85% -10%, rgba(198,255,58,.06), transparent 60%),
+      radial-gradient(700px 400px at -5% 5%, rgba(77,177,255,.05), transparent 60%),
+      repeating-linear-gradient(0deg, transparent, transparent 38px, rgba(255,255,255,.012) 38px, rgba(255,255,255,.012) 39px);
+    min-height:100vh;}
+  .wrap{max-width:1120px; margin:0 auto; padding:18px 16px 96px}
+  header.top{padding:14px 2px 6px; border-bottom:1px solid var(--line); margin-bottom:14px}
+  .kicker{font-family:var(--mono); font-size:11px; letter-spacing:.22em; text-transform:uppercase; color:var(--lime-dim)}
+  h1{font-family:var(--disp); font-weight:800; font-size:clamp(28px,6vw,46px); line-height:.98; margin:6px 0 4px; letter-spacing:-.02em}
+  h1 .yr{color:var(--lime)}
+  .sub{color:var(--muted); font-size:14px; max-width:64ch} .sub b{color:var(--ink)}
+
+  .tabs{display:flex; gap:6px; flex-wrap:wrap; margin:16px 0 6px; position:sticky; top:0; z-index:30;
+        background:linear-gradient(var(--bg),var(--bg) 70%, transparent); padding:8px 0}
+  .tab{font-family:var(--disp); font-weight:600; font-size:14px; padding:9px 15px; border:1px solid var(--line);
+       background:var(--card); color:var(--muted); border-radius:999px; cursor:pointer; transition:.15s; user-select:none}
+  .tab:hover{color:var(--ink); border-color:#3a463c}
+  .tab.active{background:var(--lime); color:#0c0f0d; border-color:var(--lime)}
+
+  .scoreboard{display:flex; align-items:center; gap:14px; flex-wrap:wrap; background:var(--card2); border:1px solid var(--line);
+    border-radius:13px; padding:11px 15px; margin:8px 0 14px}
+  .scoreboard .big{font-family:var(--mono); font-weight:700; font-size:26px; color:var(--lime); line-height:1}
+  .scoreboard .lbl{font-family:var(--mono); font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted2)}
+  .scoreboard .col{display:flex; flex-direction:column; gap:2px}
+  .scoreboard .col .v{font-family:var(--mono); font-weight:700; font-size:15px; color:var(--ink)}
+  .scoreboard .reset{margin-left:auto; font-size:11.5px; color:var(--muted); border:1px solid var(--line); background:var(--card);
+    border-radius:8px; padding:6px 10px; cursor:pointer} .scoreboard .reset:hover{border-color:var(--loss); color:var(--loss)}
+  .toolbar .tbtn{font-size:11.5px; color:var(--muted); border:1px solid var(--line); background:var(--card);
+    border-radius:8px; padding:6px 10px; cursor:pointer} .toolbar .tbtn:hover{border-color:var(--lime); color:var(--lime)}
+
+  .toolbar{display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin:6px 0 14px}
+  select,.btn{font-family:var(--body); font-size:13px; border-radius:10px; border:1px solid var(--line); background:var(--card); color:var(--ink); padding:8px 12px; cursor:pointer}
+  select{appearance:none; padding-right:28px;
+    background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);
+    background-position:calc(100% - 15px) 16px, calc(100% - 10px) 16px; background-size:5px 5px,5px 5px; background-repeat:no-repeat}
+  .btn-primary{background:var(--lime); color:#0c0f0d; border-color:var(--lime); font-weight:700; font-family:var(--disp)}
+  .btn-primary:hover{filter:brightness(1.06)}
+  .chk{display:flex; align-items:center; gap:7px; font-size:13px; color:var(--muted); cursor:pointer; user-select:none; padding:8px 12px; border:1px solid var(--line); border-radius:10px; background:var(--card)}
+  .chk input{accent-color:var(--lime)}
+  .note{font-size:12.5px; color:var(--muted); background:var(--card); border:1px solid var(--line); border-left:3px solid var(--gold); border-radius:10px; padding:10px 13px; margin:10px 0 16px} .note b{color:var(--gold)}
+  .note.lime{border-left-color:var(--lime)} .note.lime b{color:var(--lime)}
+
+  .daygroup{margin-bottom:20px}
+  .dayhead{font-family:var(--mono); font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted2); border-bottom:1px dashed var(--line); padding-bottom:5px; margin:14px 0 10px}
+  .match{display:grid; grid-template-columns:60px 1fr auto; gap:12px; align-items:start; background:var(--card); border:1px solid var(--line); border-radius:13px; padding:11px 13px; margin-bottom:9px; transition:.15s}
+  .match:hover{border-color:#36433a}
+  .match.swiss{border-color:rgba(255,59,59,.4); background:linear-gradient(90deg, rgba(255,59,59,.07), var(--card) 40%)}
+  .m-time{font-family:var(--mono); font-size:12px; color:var(--muted); line-height:1.3; padding-top:2px}
+  .m-time .t{color:var(--ink); font-weight:700; font-size:15px; display:block}
+  .m-time .lock{display:inline-block; margin-top:4px; font-size:9px; padding:1px 5px; border-radius:4px; letter-spacing:.03em}
+  .lock.open{background:rgba(98,210,122,.16); color:var(--win)} .lock.closed{background:rgba(232,115,107,.16); color:var(--loss)}
+  .m-main{min-width:0; padding-top:1px}
+  .m-teams{display:flex; align-items:center; gap:8px; flex-wrap:wrap}
+  .team{display:flex; align-items:center; gap:6px; font-weight:600; font-size:15.5px}
+  .team .fl{font-size:17px}
+  .vs{color:var(--muted2); font-family:var(--mono); font-size:12px}
+  .grp-badge{font-family:var(--mono); font-size:10px; font-weight:700; color:var(--lime-dim); border:1px solid var(--line); border-radius:5px; padding:1px 5px}
+  .m-meta{display:flex; gap:6px 14px; flex-wrap:wrap; margin-top:6px; font-size:11.5px; color:var(--muted)}
+  .m-meta .pred b{color:var(--ink); font-family:var(--mono)}
+  .m-meta .tip{color:var(--lime-dim)} .m-meta .tip b{color:var(--lime); font-family:var(--mono)}
+  .m-meta .h2h{color:var(--muted2)}
+  .copytip{cursor:pointer; border:1px solid var(--line); background:var(--card2); color:var(--lime-dim); border-radius:6px; font-family:var(--mono); font-size:10px; padding:1px 6px; margin-left:2px}
+  .copytip:hover{border-color:var(--lime); color:var(--lime)}
+  .probbar{display:flex; height:5px; border-radius:3px; overflow:hidden; margin-top:7px; max-width:340px; background:var(--card2)}
+  .probbar i{display:block; height:100%}
+  .pb-w{background:var(--win)} .pb-d{background:var(--draw)} .pb-l{background:var(--loss)}
+
+  .m-entry{display:flex; flex-direction:column; gap:6px; align-items:flex-end}
+  .entry-row{display:flex; align-items:center; gap:5px}
+  .elbl{font-family:var(--mono); font-size:9px; letter-spacing:.05em; text-transform:uppercase; color:var(--muted2); width:54px; text-align:right}
+  .entry-row.tip .elbl{color:var(--lime-dim)}
+  .m-entry input{width:32px; height:34px; text-align:center; font-family:var(--mono); font-weight:700; font-size:16px; background:var(--card2); border:1px solid var(--line); border-radius:8px; color:var(--ink); -moz-appearance:textfield}
+  .m-entry input::-webkit-outer-spin-button,.m-entry input::-webkit-inner-spin-button{-webkit-appearance:none; margin:0}
+  .entry-row.tip input{border-color:#3a4a2e}
+  .m-entry input:focus{outline:none; border-color:var(--lime)}
+  .m-entry .dash{color:var(--muted2); font-family:var(--mono)}
+  .ptline{font-family:var(--mono); font-size:11px; padding:2px 7px; border-radius:6px; background:rgba(198,255,58,.13); color:var(--lime); min-height:18px}
+  .ptline.zero{background:rgba(232,115,107,.13); color:var(--loss)}
+  .ptline.empty{background:transparent; color:var(--muted2)}
+
+  @media(max-width:560px){
+    .match{grid-template-columns:54px 1fr}
+    .m-time{font-size:11px}
+    .m-entry{grid-column:1/-1; flex-direction:row; flex-wrap:wrap; align-items:center; gap:8px 10px; justify-content:flex-start;
+             margin-top:8px; padding-top:9px; border-top:1px dashed var(--line)}
+    .elbl{width:auto}
+  }
+
+  .tcard{background:var(--card); border:1px solid var(--line); border-radius:13px; padding:13px 15px; margin-bottom:10px}
+  .tcard .th{display:flex; align-items:center; gap:9px; flex-wrap:wrap}
+  .tcard .name{font-family:var(--disp); font-weight:700; font-size:18px}
+  .tcard .rk{font-family:var(--mono); font-size:11px; color:var(--muted)}
+  .rate{margin-left:auto; font-family:var(--mono); font-size:11px; color:var(--muted)} .rate b{color:var(--lime); font-size:13px}
+  .tgrid{display:grid; grid-template-columns:1fr 1fr; gap:8px 18px; margin-top:9px; font-size:13px}
+  @media(max-width:620px){.tgrid{grid-template-columns:1fr}}
+  .tgrid .lbl{font-family:var(--mono); font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted2); display:block; margin-bottom:1px}
+  .tgrid .s b{color:var(--win)} .tgrid .w b{color:var(--loss)}
+  .keyinfo{font-size:12.5px; color:var(--gold); margin-top:8px; padding-top:8px; border-top:1px dashed var(--line)}
+  .hist{font-size:11.5px; color:var(--muted); margin-top:5px; font-family:var(--mono)}
+
+  .stgroup{background:var(--card); border:1px solid var(--line); border-radius:13px; padding:6px 4px 8px; margin-bottom:12px}
+  .stgroup h3{font-family:var(--disp); font-size:15px; margin:8px 12px 4px}
+  table.st{width:100%; border-collapse:collapse; font-size:13px}
+  table.st th{font-family:var(--mono); font-size:9.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted2); font-weight:500; text-align:center; padding:5px 4px}
+  table.st th.l,table.st td.l{text-align:left}
+  table.st td{padding:6px 4px; text-align:center; border-top:1px solid var(--line); font-family:var(--mono)}
+  table.st td.l{font-family:var(--body); font-weight:600}
+  .qual{box-shadow:inset 3px 0 0 var(--lime)}
+  .adv .pct{color:var(--lime)} .legend{font-size:11px; color:var(--muted); margin:2px 12px 8px}
+  .legend i{display:inline-block; width:9px; height:9px; border-radius:2px; vertical-align:middle; margin:0 3px 0 9px}
+
+  .foot{margin-top:24px; padding-top:14px; border-top:1px solid var(--line); font-size:11.5px; color:var(--muted2)}
+  .hidden{display:none !important}
+  .recalc-wrap{position:fixed; left:0; right:0; bottom:14px; z-index:25; display:flex; justify-content:center; pointer-events:none}
+  .recalc{pointer-events:auto; box-shadow:0 8px 30px rgba(0,0,0,.55); padding:12px 22px; font-size:15px; border-radius:999px}
+  .spin{display:inline-block; width:13px; height:13px; border:2px solid rgba(12,15,13,.3); border-top-color:#0c0f0d; border-radius:50%; animation:sp .7s linear infinite; vertical-align:-2px; margin-right:7px}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  details.rules{background:var(--card); border:1px solid var(--line); border-radius:11px; padding:0 14px; margin:10px 0 0}
+  details.rules summary{cursor:pointer; padding:11px 0; font-family:var(--disp); font-weight:600; font-size:14px; color:var(--lime-dim)}
+  details.rules ul{margin:0 0 12px; padding-left:18px; font-size:13px; color:var(--muted)} details.rules b{color:var(--ink); font-family:var(--mono)}
+  .ko-round{font-family:var(--disp);font-weight:800;font-size:15px;color:var(--lime);margin:20px 2px 6px;letter-spacing:.3px}
+  .ko-num{font-family:var(--mono);font-size:11px;color:var(--muted2)}
+  .ko-ph{color:var(--muted2)!important;font-style:italic;font-weight:600}
+  .ko-adv{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:2px 0 0;padding:0 2px 2px}
+  .ko-adv .lbl{font-family:var(--mono);font-size:10px;color:var(--muted2)}
+  .ko-advbtn{font-family:var(--body);font-size:12px;border:1px solid var(--line);background:var(--card2);color:var(--muted);border-radius:8px;padding:5px 11px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .ko-advbtn.sel{border-color:var(--lime);color:var(--lime);background:rgba(193,255,42,.08)}
+  .note.lime{border-color:rgba(193,255,42,.35)}
+  .team[data-team]{cursor:pointer}
+  .team[data-team]:hover{text-decoration:underline; text-decoration-color:var(--lime); text-underline-offset:3px}
+  .tcard.flash{border-color:var(--lime); box-shadow:0 0 0 2px rgba(198,255,58,.25); animation:tflash 1.6s ease}
+  @keyframes tflash{0%{background:rgba(198,255,58,.18)}100%{background:var(--card)}}
+  .tiprec{display:flex; align-items:center; gap:9px; margin-top:8px; font-family:var(--body); font-size:15px; color:var(--lime-dim)}
+  .tiprec b{font-family:var(--mono); font-size:21px; font-weight:700; color:var(--lime); letter-spacing:.5px}
+  #view-modell .mblock{background:var(--card); border:1px solid var(--line); border-radius:13px; padding:14px 16px; margin-bottom:12px}
+  #view-modell .mblock h3{font-family:var(--disp); font-size:16px; color:var(--lime); margin:0 0 7px}
+  #view-modell .mblock.hl{border-color:rgba(193,255,42,.4); background:rgba(193,255,42,.05)}
+  #view-modell p{margin:6px 0; line-height:1.5; font-size:13.5px; color:var(--muted)}
+  #view-modell .eq{font-family:var(--mono); font-size:14px; color:var(--ink); background:var(--card2); padding:9px 11px; border-radius:8px; text-align:center}
+  #view-modell .muted2{color:var(--muted2); font-size:12px}
+  .mtab{width:100%; border-collapse:collapse; margin:8px 0; font-size:13px}
+  .mtab th,.mtab td{border:1px solid var(--line); padding:5px 8px; text-align:center; font-family:var(--mono)}
+  .mtab th{color:var(--muted2); font-family:var(--body); font-weight:600}
+  .mcalc{display:flex; align-items:center; gap:10px; margin:6px 0 12px; flex-wrap:wrap}
+  .mcalc select{background:var(--card2); color:var(--ink); border:1px solid var(--line); border-radius:9px; padding:8px 11px; font-size:14px; font-family:var(--body)}
+  .mcrow{display:flex; justify-content:space-between; align-items:center; gap:10px; padding:8px 11px; border:1px solid var(--line); border-radius:9px; margin-bottom:6px; font-size:14px; color:var(--ink)}
+  .mcrow>span:first-child{color:var(--muted2); font-size:12px; font-family:var(--mono)}
+  .mcrow b{font-family:var(--mono)}
+  .mcrow.tipbig{background:rgba(193,255,42,.08); border-color:rgba(193,255,42,.35)}
+  .mcrow.tipbig b{color:var(--lime); font-size:22px}
+  .msc{width:100%; border-collapse:collapse; margin-top:8px; font-size:13px}
+  .msc th{text-align:left; color:var(--muted2); font-family:var(--body); font-weight:600; padding:4px 8px}
+  .msc td{border-top:1px solid var(--line); padding:4px 8px; font-family:var(--mono)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="kicker">FIFA Weltmeisterschaft · USA · Kanada · Mexiko</div>
+    <h1>WM <span class="yr">2026</span> Tipp-Helfer</h1>
+    <div class="sub">Gib pro Spiel <b>dini Tipp</b> und (sobald gspilt) s <b>tatsächliche Resultat</b> ii — s Tool zählt automatisch dini Pünkt nach de Regle. Prognose-Modell jetzt mit Dixon-Coles-Korrektur, grächnet gäge alli 964 WM-Spiel.</div>
+    <details class="rules">
+      <summary>Punkteregle</summary>
+      <ul>
+        <li><b>Gruppephase:</b> Sieger/Tendenz = <b>5</b> · Heim-Goal exakt = <b>+1</b> · Gast-Goal exakt = <b>+1</b> · Goal-Differänz (wenn de Sieger stimmt) = <b>+3</b> → exakt = max. <b>10</b></li>
+        <li><b>K.o.-Phase:</b> Sieger = <b>10</b> · Heim-Goal = <b>+2</b> · Gast-Goal = <b>+2</b> · Goal-Differänz = <b>+6</b> → exakt = <b>20</b> (nach 120 Min., ohni Penaltyschiesse)</li>
+        <li><b>Modell-Tipp</b> = gerundeti erwarteti Goals us em Stärke-Modell (Dixon-Coles, uf 115 echti Spiel us WM 2022 &amp; EM 2024 kalibriert). Mit ▣ übernimmsch en direkt is «Min Tipp»-Feld. S «wahrscheinlichschte Resultat» blendet s Tool bewusst us.</li>
+      </ul>
+    </details>
+  </header>
+
+  <div class="tabs">
+    <div class="tab active" data-view="schedule">Spielplan &amp; Tipps</div>
+    <div class="tab" data-view="teams">Team-Analyse</div>
+    <div class="tab" data-view="standings">Tabelle &amp; Chancen</div>
+    <div class="tab" data-view="ko">K.o.-Phase</div>
+    <div class="tab" data-view="modell">Modell</div>
+  </div>
+
+  <!-- SCHEDULE -->
+  <section id="view-schedule">
+    <div class="scoreboard">
+      <div class="col"><span class="lbl">Dini Pünkt total</span><span class="big" id="sbTotal">0</span></div>
+      <div class="col"><span class="lbl">Spiel gewertet</span><span class="v" id="sbCount">0 / 72</span></div>
+      <div class="col"><span class="lbl">Ø pro Spiel</span><span class="v" id="sbAvg">–</span></div>
+      <button class="reset" id="resetBtn">alli Iiträg lösche</button>
+    </div>
+    <div class="toolbar">
+      <select id="grpFilter"><option value="all">Alli Gruppe</option></select>
+      <label class="chk"><input type="checkbox" id="swissOnly"> nur 🇨🇭</label>
+      <label class="chk"><input type="checkbox" id="hideDone"> gwerteti Spiel uusblände</label>
+      <button class="tbtn" id="exportBtn" type="button">Tipps exportiere</button>
+      <button class="tbtn" id="importBtn" type="button">Tipps importiere</button>
+      <input type="file" id="importFile" accept=".json,application/json" style="display:none">
+    </div>
+    <div id="scheduleBody"></div>
+  </section>
+
+  <!-- TEAMS -->
+  <section id="view-teams" class="hidden">
+    <div class="toolbar">
+      <select id="grpFilterT"><option value="all">Alli Gruppe</option></select>
+      <select id="sortT"><option value="group">Sortiere: nach Gruppe</option><option value="rating">Sortiere: nach Stärke</option></select>
+    </div>
+    <div class="note">Stärke-Wert (<b>R</b>) = mini Elo-ähnlichi Iischätzig (Form, Kader, Ranking, Verletzige) — si triebt s Modell. «WM zuletzt» = WM 2022; «EM zuletzt» = EM 2024 (UEFA-Teams).</div>
+    <div id="teamsBody"></div>
+  </section>
+
+  <!-- STANDINGS -->
+  <section id="view-standings" class="hidden">
+    <div class="note">D <span style="color:var(--lime)">% Achtelfinal</span> chunnt us bis zu <b id="simN">50'000</b> simulierte Turnier-Verläuf: iigetrageni Resultat sind fix, de Räscht wird mit em Modell gwürflet. Top 2 jeder Gruppe + die 8 beschte Dritte chömed witer.</div>
+    <div class="legend"><i style="background:var(--lime)"></i>Platz 1–2 (direkt) — % Achtelfinal inkl. Dritte-Chance</div>
+    <div id="standingsBody"></div>
+  </section>
+
+  <!-- KO -->
+  <section id="view-ko" class="hidden">
+    <div class="note lime"><b>K.o.-Phase:</b> D Paarige fülled sich automatisch us de Tabelle — Gruppe-Sieger &amp; Zwöiti sobald e Gruppe fertig gspilt isch, die 8 beschte Dritte sobald <b>alli</b> Gruppe durch sind (exakt nach FIFA Annex C, 495 Kombinatione). Tipp &amp; Resultat = Stand nach 120 Min (ohni Penaltyschiesse). Bi Unentschiede wähl, wer per Penalty wiiterchunnt, demit s Bracket witerlauft. Punkt: richtige Sieger/Tendenz <b>10</b> · jedi exakti Goal-Zahl <b>+2</b> · richtigi Goal-Differänz <b>+6</b> (exakt = 20).</div>
+    <div id="koBody"></div>
+  </section>
+
+  <!-- MODELL -->
+  <section id="view-modell" class="hidden">
+    <div class="note">So rächnet de Tipphelfer — i 5 Schritt zum nachevollzieh. <b>Alli Zahle sind us echte Spiel abgleitet</b>, nüt isch willkürlich gsetzt.</div>
+    <div class="mblock"><h3>1 · Team-Stärki (Elo)</h3>
+      <p>Jedes Team het e Stärki-Zahl, berächnet us <b>~49'000 echte Länderspiel (1872–8.6.2026)</b>: gwinnt es gäge en starke Gegner, stiigt d Zahl, susch fallt si — proportional zu de Goal-Differänz. Aktuelli Spanne: <b>Spanie 2217</b> bis <b>Katar 1565</b>. <span class="muted2">(Elo cha Teams us schwächere Konföderatione liecht überschätze.)</span></p></div>
+    <div class="mblock"><h3>2 · Vom Stärke-Abstand zu de erwartete Goals</h3>
+      <p>De Abstand Δ zwüsche de zwöi Elo-Wert bestimmt d erwartete Goals. Us 5'847 moderni neutrali Spiel chunnt e eifachi Gsetzmässigkeit:</p>
+      <p class="eq">λ<sub>stärkers</sub> = 1.26 · e<sup>(0.00209·Δ)</sup>&nbsp;&nbsp;&nbsp;λ<sub>schwächers</sub> = 1.26 · e<sup>(−0.00209·Δ)</sup></p>
+      <p>Pro 100 Elo Vorsprung schüsst de Favorit ~1.23× so vill, de Underdog ~0.81×. Bi gliich starke: 1.26 Goal/Team ≈ 2.5 total (=WM-Schnitt). D Formle passt sehr guet uf d Date:</p>
+      <table class="mtab"><tr><th>Elo-Δ</th><th>λ Fav echt/Modell</th><th>λ Dog echt/Modell</th></tr>
+      <tr><td>~20</td><td>1.37 / 1.31</td><td>1.17 / 1.21</td></tr>
+      <tr><td>~115</td><td>1.61 / 1.60</td><td>1.00 / 0.99</td></tr>
+      <tr><td>~230</td><td>2.09 / 2.04</td><td>0.72 / 0.77</td></tr>
+      <tr><td>~305</td><td>2.39 / 2.39</td><td>0.61 / 0.66</td></tr>
+      <tr><td>~450+</td><td>3.67 / 4.10</td><td>0.33 / 0.39</td></tr></table></div>
+    <div class="mblock"><h3>3 · Vo λ zu Resultat-Wahrscheinlichkeite</h3>
+      <p>Mit de erwartete Goals git d <b>Poisson-Verteilig</b> d Wahrscheinlichkeit für jedes exakte Resultat. E chliini <b>Dixon-Coles-Korrektur</b> (ρ=−0.10) hebt knappi Resultat &amp; Remis es bizeli a — wie i de Realität.</p></div>
+    <div class="mblock"><h3>4 · De Tipp</h3>
+      <p>De Tipp-Vorschlag sind d <b>gerundete erwartete Goals</b>. Im Backtest gäge WM 2022 &amp; EM 2024 (115 Spiel) het das am meischte Punkt brocht — meh als de mathematisch «optimal» tiefe argmax-Tipp.</p></div>
+    <div class="mblock hl"><h3>⚠ Wieso sind d Tipps fascht immer 0–1 Goal Differänz?</h3>
+      <p>Das isch <b>kei Fähler</b>, sondern Statistik. E <i>einzelni</i> beschti Schätzig pro Spiel landet bim wahrscheinlichschte Wert — und au bi grosse Favorite isch en knappe Sieg (2:1) wahrscheinlicher als en exakte Kantersieg (4:0). Drum sind d Tipps schmaler als d Gesamt-Verteilig:</p>
+      <table class="mtab"><tr><th>Goal-Diff</th><th>echt</th><th>Modell-Wahrsch.</th><th>Tipp</th></tr>
+      <tr><td>0</td><td>27.8%</td><td>24%</td><td>27%</td></tr>
+      <tr><td>1</td><td>38.3%</td><td>34%</td><td>62%</td></tr>
+      <tr><td>2</td><td>20.9%</td><td>22%</td><td>10%</td></tr>
+      <tr><td>3+</td><td>13.1%</td><td>19%</td><td>2%</td></tr></table>
+      <p>D Modell-<b>Wahrscheinlichkeite</b> (Mitti) träffed d Realität. De <b>Tipp</b> (rächts) isch schmaler — und <b>genau das maximiert d Punkt</b> (bewise im Backtest).</p></div>
+    <div class="mblock"><h3>5 · Sälber prüefe — Match-Rächner</h3>
+      <div class="mcalc"><select id="modSelA"></select><span class="vs">vs</span><select id="modSelB"></select></div>
+      <div id="modCalcOut"></div></div>
+  </section>
+
+  <div class="foot">
+    Stand ~8.6.2026 · Ziite = Schwiizer Ziit (MESZ). Modell & Tipp-Vorschläg sind Schätzige — am offizielle Portal d Anpfiffziit (–5 Min Deadline) verifiziere. Empirischi Resultat-Verteilig: 964 WM-Spiel (inkl. 2022). Alli Date blibed lokal im Browser.
+  </div>
+</div>
+
+<div class="recalc-wrap"><button class="btn btn-primary recalc" id="recalcBtn">↻ Wahrschiinlichkeite neu berächne</button></div>
+
+<script>
+"use strict";
+/* =================================================== DATA */
+const FLAG={Mexico:"🇲🇽",SouthAfrica:"🇿🇦",SouthKorea:"🇰🇷",Czechia:"🇨🇿",Canada:"🇨🇦",Switzerland:"🇨🇭",Qatar:"🇶🇦",Bosnia:"🇧🇦",Brazil:"🇧🇷",Morocco:"🇲🇦",Haiti:"🇭🇹",Scotland:"🏴",USA:"🇺🇸",Australia:"🇦🇺",Paraguay:"🇵🇾",Turkiye:"🇹🇷",Germany:"🇩🇪",Curacao:"🇨🇼",IvoryCoast:"🇨🇮",Ecuador:"🇪🇨",Netherlands:"🇳🇱",Japan:"🇯🇵",Sweden:"🇸🇪",Tunisia:"🇹🇳",Belgium:"🇧🇪",Egypt:"🇪🇬",Iran:"🇮🇷",NewZealand:"🇳🇿",Spain:"🇪🇸",CapeVerde:"🇨🇻",SaudiArabia:"🇸🇦",Uruguay:"🇺🇾",France:"🇫🇷",Senegal:"🇸🇳",Iraq:"🇮🇶",Norway:"🇳🇴",Argentina:"🇦🇷",Algeria:"🇩🇿",Austria:"🇦🇹",Jordan:"🇯🇴",Portugal:"🇵🇹",DRCongo:"🇨🇩",Uzbekistan:"🇺🇿",Colombia:"🇨🇴",England:"🏴",Croatia:"🇭🇷",Ghana:"🇬🇭",Panama:"🇵🇦"};
+const NAME={Mexico:"Mexiko",SouthAfrica:"Südafrika",SouthKorea:"Südkorea",Czechia:"Tschechien",Canada:"Kanada",Switzerland:"Schweiz",Qatar:"Katar",Bosnia:"Bosnien-H.",Brazil:"Brasilien",Morocco:"Marokko",Haiti:"Haiti",Scotland:"Schottland",USA:"USA",Australia:"Australien",Paraguay:"Paraguay",Turkiye:"Türkei",Germany:"Deutschland",Curacao:"Curaçao",IvoryCoast:"Elfenbeinküste",Ecuador:"Ecuador",Netherlands:"Niederlande",Japan:"Japan",Sweden:"Schweden",Tunisia:"Tunesien",Belgium:"Belgien",Egypt:"Ägypten",Iran:"Iran",NewZealand:"Neuseeland",Spain:"Spanien",CapeVerde:"Kap Verde",SaudiArabia:"Saudi-Arabien",Uruguay:"Uruguay",France:"Frankreich",Senegal:"Senegal",Iraq:"Irak",Norway:"Norwegen",Argentina:"Argentinien",Algeria:"Algerien",Austria:"Österreich",Jordan:"Jordanien",Portugal:"Portugal",DRCongo:"DR Kongo",Uzbekistan:"Usbekistan",Colombia:"Kolumbien",England:"England",Croatia:"Kroatien",Ghana:"Ghana",Panama:"Panama"};
+const HOST={USA:1,Mexico:1,Canada:1};
+const T={
+ Mexico:{g:"A",r:1820,s:"Heimvorteil & Lärmkulisse, eingespielt, schnelle Flügel",w:"Achtelfinal-Grenze, dünne Sturm-Durchschlagskraft",k:"Gastgeber, Trainer Javier Aguirre — Erfahrung, Kader stabil",wm:"WM22: Gruppe (out)",em:""},
+ SouthAfrica:{g:"A",r:1700,s:"Jung, lauffreudig, gute Defensiv-Organisation",w:"Wenig WM-Erfahrung, Chancenverwertung",k:"Erstmals seit 2010 wieder dabei; Aussenseiter",wm:"WM22: nicht qual.",em:""},
+ SouthKorea:{g:"A",r:1790,s:"Tempo, Son als Leader, Pressing",w:"Defensive Stabilität, Abhängigkeit von Son",k:"Son weiterhin Schlüsselspieler; solider Kader",wm:"WM22: Achtelfinal",em:""},
+ Czechia:{g:"A",r:1790,s:"Kompakt, Standards, kämpferisch",w:"Wenig Weltklasse-Tempo vorne",k:"Über Playoff (Sieg vs. Dänemark i.E.) qual.",wm:"WM22: nicht qual.",em:"EM24: Gruppe (out)"},
+ Canada:{g:"B",r:1720,s:"Heimvorteil, Athletik, Davies/David-Tempo",w:"Turnier-Reife, defensive Aussetzer",k:"Gastgeber, Trainer Jesse Marsch — intensives Pressing",wm:"WM22: Gruppe (out)",em:""},
+ Switzerland:{g:"B",r:1875,s:"Turniererprobt, defensiv top, Xhaka als Taktgeber",w:"Tor-Effizienz, Kaderbreite vorne",k:"Trainer Murat Yakin; nach starker EM24 viel zugetraut",wm:"WM22: Achtelfinal",em:"EM24: Viertelfinal"},
+ Qatar:{g:"B",r:1700,s:"Eingespielt, technisch, Asien-Champion",w:"Körperlichkeit gegen Top-Teams, WM-Bilanz schwach",k:"Erste WM ausserhalb Heimturnier",wm:"WM22: Gruppe (Gastgeber)",em:""},
+ Bosnia:{g:"B",r:1760,s:"Physisch, Džeko-Erfahrung, gefährlich bei Standards",w:"Alternder Kern, Konstanz",k:"Über Playoff (Final-Sieg i.E. vs. Italien) — Euphorie",wm:"WM22: nicht qual.",em:""},
+ Brazil:{g:"C",r:2030,s:"Individuelle Klasse, Tiefe, Vinícius/Raphinha",w:"Mehrere Schlüsselausfälle, neue Hierarchie",k:"Trainer Ancelotti; OHNE Rodrygo, Militão, Estêvão (verletzt), Joao Pedro/Richarlison gestrichen",wm:"WM22: Viertelfinal",em:""},
+ Morocco:{g:"C",r:1900,s:"Defensiv-Block elite, Hakimi, kollektiv stark",w:"Tor-Abschluss zeitweise",k:"WM22-Halbfinalist; Geheimfavorit",wm:"WM22: 4. Platz",em:""},
+ Haiti:{g:"C",r:1560,s:"Kampfgeist, Überraschungsmoment",w:"Klar schwächster Kader der Gruppe",k:"Grosser Aussenseiter, erste WM seit 1974",wm:"WM22: nicht qual.",em:""},
+ Scotland:{g:"C",r:1755,s:"Intensität, Standards, Robertson/McTominay",w:"Wenig Spitzentempo, Tor-Flaute",k:"Erste WM seit 1998 — historisch",wm:"WM22: nicht qual.",em:"EM24: Gruppe (out)"},
+ USA:{g:"D",r:1835,s:"Heimvorteil, athletisch, Pulišić, junge Talente",w:"Konstanz, Druck als Gastgeber",k:"Gastgeber, Trainer Pochettino — 1. Grossturnier mit Team",wm:"WM22: Achtelfinal",em:""},
+ Australia:{g:"D",r:1750,s:"Mentalität, Organisation, nie aufgeben",w:"Begrenzte Offensiv-Qualität",k:"Solide, gilt als schwächstes Topf-2-Team",wm:"WM22: Achtelfinal",em:""},
+ Paraguay:{g:"D",r:1745,s:"Defensiv robust, Konter, zweikampfstark",w:"Wenig Kreativität im letzten Drittel",k:"Erste WM seit 2010",wm:"WM22: nicht qual.",em:""},
+ Turkiye:{g:"D",r:1805,s:"Junge Top-Talente (Güler, Kökçü), Tempo",w:"Defensive Wackler, Konstanz",k:"Über Playoff (vs. Kosovo) qual.; viel Talent",wm:"WM22: nicht qual.",em:"EM24: Viertelfinal"},
+ Germany:{g:"E",r:1975,s:"Ballbesitz, Mittelfeld-Qualität (Wirtz)",w:"Defensive Anfälligkeit, Nervenstärke zuletzt",k:"Trainer Nagelsmann; Gnabry verletzt out",wm:"WM22: Gruppe (out)",em:"EM24: Viertelfinal"},
+ Curacao:{g:"E",r:1600,s:"Technisch, Karibik-Legionäre, unbekümmert",w:"Kleinster Verband je bei einer WM, Tiefe",k:"WM-Debütant — Sensation",wm:"WM22: nicht qual.",em:""},
+ IvoryCoast:{g:"E",r:1780,s:"Athletik, Afrika-Cup-Sieger 2024, Tempo aussen",w:"Konstanz, WM-Erfahrung",k:"Gefährlicher Topf-3-Gegner",wm:"WM22: nicht qual.",em:""},
+ Ecuador:{g:"E",r:1815,s:"Junge, athletische Mannschaft, defensiv stabil",w:"Tor-Ausbeute, Abhängigkeit von wenigen",k:"Stark in der Quali; unangenehm",wm:"WM22: Gruppe (out)",em:""},
+ Netherlands:{g:"F",r:1985,s:"Eingespielt, Gakpo/Depay, taktisch flexibel",w:"Xavi Simons verletzt; teils zu passiv",k:"Trainer Koeman; Kreativ-Verlust durch Simons-Ausfall",wm:"WM22: Viertelfinal",em:"EM24: Halbfinal"},
+ Japan:{g:"F",r:1845,s:"Pressing, Tempo, schlägt gerne Grosse",w:"Mitoma & Minamino verletzt out",k:"Trainer Moriyasu; Gruppenfavorit denkbar",wm:"WM22: Achtelfinal",em:""},
+ Sweden:{g:"F",r:1795,s:"Gyökeres/Isak-Power, physisch, Konter",w:"Mittelfeld-Kreativität, lange WM-Pause",k:"Über Playoff (Gyökeres-Hattrick vs. Ukraine) zurück",wm:"WM22: nicht qual.",em:""},
+ Tunisia:{g:"F",r:1735,s:"Organisiert, defensiv diszipliniert",w:"Offensiv harmlos gegen Top-Teams",k:"Routinierter Aussenseiter",wm:"WM22: Gruppe (out)",em:""},
+ Belgium:{g:"G",r:1925,s:"Individuelle Klasse, De Bruyne, Erfahrung",w:"Alternde Generation, Defensiv-Tempo",k:"Talentübergang nicht ganz vollzogen",wm:"WM22: Gruppe (out)",em:"EM24: Achtelfinal"},
+ Egypt:{g:"G",r:1760,s:"Salah als Unterschiedsspieler, Kampf",w:"Zu abhängig von Salah, Tiefe",k:"Steht und fällt mit Salah",wm:"WM22: nicht qual.",em:""},
+ Iran:{g:"G",r:1760,s:"Defensiv eng, konterstark, Taremi",w:"Wenig Ballbesitz-Lösungen",k:"Asiatische Konstante, unangenehm",wm:"WM22: Gruppe (out)",em:""},
+ NewZealand:{g:"G",r:1615,s:"Physisch, Standards, Wood vorne",w:"Niveau-Sprung zu Top-Teams gross",k:"Ozeanien-Vertreter, Aussenseiter",wm:"WM22: nicht qual.",em:""},
+ Spain:{g:"H",r:2095,s:"Europameister, Ballbesitz-Dominanz, Yamal/Pedri, FIFA-Nr.1",w:"Tor-Center, alle Real-Madrid-Spieler fehlen (Entscheid)",k:"Trainer De la Fuente; OHNE jeden Real-Spieler, Fermín López verletzt — Topfavorit",wm:"WM22: Achtelfinal",em:"EM24: Europameister"},
+ CapeVerde:{g:"H",r:1680,s:"Kompakt, Teamgeist, athletisch",w:"WM-Debütant, dünne Tiefe",k:"Sensations-Debütant; Trainer Bubista (CAF-Trainer 2025)",wm:"WM22: nicht qual.",em:""},
+ SaudiArabia:{g:"H",r:1690,s:"Schlug Argentinien 2022, ligastark",w:"Konstanz, gegen Top-Ballbesitz anfällig",k:"Überraschungspotenzial vorhanden",wm:"WM22: Gruppe (out)",em:""},
+ Uruguay:{g:"H",r:1925,s:"Bielsa-Pressing, Núñez/Pellistri, mental hart",w:"Disziplin/Hitzkopf-Momente",k:"Trainer Bielsa — klare Spielidee, Geheimfavorit",wm:"WM22: Gruppe (out)",em:""},
+ France:{g:"I",r:2080,s:"Brutale Kaderbreite, Mbappé, alle Teamteile top",w:"Ekitike verletzt; gelegentliche Behäbigkeit",k:"Trainer Deschamps — letzte WM; Top-Favorit",wm:"WM22: Final (2.)",em:"EM24: Halbfinal"},
+ Senegal:{g:"I",r:1860,s:"Athletik, Tempo, defensiv stark",w:"Tor-Verwertung, Druckphasen",k:"Stärkster Topf-2-Gegner — «Todesgruppe»",wm:"WM22: Achtelfinal",em:""},
+ Iraq:{g:"I",r:1660,s:"Kampfstark, Heim-Support in den USA",w:"Niveau-Unterschied zur Spitze",k:"Über interkont. Playoff (vs. Bolivien) — 1. WM seit 1986",wm:"WM22: nicht qual.",em:""},
+ Norway:{g:"I",r:1855,s:"Haaland & Ødegaard — Weltklasse-Achse",w:"Wenig Turniererfahrung, dünne Tiefe",k:"Erste WM seit 1998 — alle Augen auf Haaland",wm:"WM22: nicht qual.",em:""},
+ Argentina:{g:"J",r:2085,s:"Weltmeister, Mentalität, eingespielt, Messi-Magie",w:"Alterung im Kern, Messi-Form/-Fitness",k:"Trainer Scaloni — Titelverteidiger",wm:"WM22: Weltmeister",em:""},
+ Algeria:{g:"J",r:1770,s:"Technik, Mahrez-Klasse, schnelles Umschalten",w:"Konstanz, WM-Erfahrung gering",k:"Trainer Petković (ex-Schweiz)",wm:"WM22: nicht qual.",em:""},
+ Austria:{g:"J",r:1815,s:"Rangnick-Pressing, intensiv, eingespielt",w:"Tor-Durchschlagskraft, Hitze-Belastung",k:"Trainer Rangnick — gewann EM24-Gruppe vor FRA/NED",wm:"WM22: nicht qual.",em:"EM24: Achtelfinal"},
+ Jordan:{g:"J",r:1640,s:"Organisiert, mutig, Asien-Überraschung",w:"Klar limitiert gegen Top-Teams",k:"WM-Debütant",wm:"WM22: nicht qual.",em:""},
+ Portugal:{g:"K",r:2010,s:"Riesen-Kaderqualität, Ronaldo, Fernandes, Tiefe",w:"Balance, Tagesform vorne",k:"Topfavorit der Gruppe; goldene Spätphase Ronaldo",wm:"WM22: Viertelfinal",em:"EM24: Viertelfinal"},
+ DRCongo:{g:"K",r:1730,s:"Athletik, Tempo, Power",w:"WM-Unerfahrenheit, Konstanz",k:"Über interkont. Playoff (vs. Jamaika) — 1. WM seit 1974",wm:"WM22: nicht qual.",em:""},
+ Uzbekistan:{g:"K",r:1695,s:"Junge, technisch saubere Generation",w:"WM-Debütant, Niveau gegen Spitze",k:"Trainer Cannavaro; WM-Debüt",wm:"WM22: nicht qual.",em:""},
+ Colombia:{g:"K",r:1905,s:"James-Kreativität, Tempo aussen, gute Quali",w:"Defensive Konzentration, Konstanz",k:"Stärkster Verfolger von Portugal",wm:"WM22: nicht qual.",em:""},
+ England:{g:"L",r:2025,s:"Kaderbreite, junge Stars, Tor-Gefahr",w:"Foden & Palmer NICHT nominiert; Turnier-Nervosität",k:"Trainer Tuchel — EM24-Finalist als Vorlage",wm:"WM22: Viertelfinal",em:"EM24: Final (2.)"},
+ Croatia:{g:"L",r:1915,s:"Modrić-geführtes Mittelfeld, Turnier-Cleverness",w:"Sehr alter Kern, Tempo-Defizite",k:"Turnier-Überflieger, aber Generationswechsel",wm:"WM22: 3. Platz",em:"EM24: Gruppe (out)"},
+ Ghana:{g:"L",r:1740,s:"Athletik, Tempo, Kudus als Unterschiedsspieler",w:"Defensive Anfälligkeit, Konstanz",k:"Gefährlicher Topf-3-Gegner",wm:"WM22: Gruppe (out)",em:""},
+ Panama:{g:"L",r:1700,s:"Kampf, Organisation, Standards",w:"Limitierte Offensiv-Klasse",k:"Zweite WM-Teilnahme",wm:"WM22: nicht qual.",em:""}
+};
+const M=[
+ ["A","Mexico","SouthAfrica","2026-06-11T21:00","Mexico-Stadt",1],["A","SouthKorea","Czechia","2026-06-12T04:00","Guadalajara",1],
+ ["B","Canada","Bosnia","2026-06-12T21:00","Toronto",1],["D","USA","Paraguay","2026-06-13T03:00","Los Angeles",1],
+ ["B","Qatar","Switzerland","2026-06-13T21:00","San Francisco",1],["C","Brazil","Morocco","2026-06-14T01:00","New Jersey",1],
+ ["C","Haiti","Scotland","2026-06-14T03:00","Boston",1],["D","Australia","Turkiye","2026-06-14T06:00","Vancouver",1],
+ ["E","Germany","Curacao","2026-06-14T20:00","Houston",1],["F","Netherlands","Japan","2026-06-14T23:00","Dallas",1],
+ ["E","IvoryCoast","Ecuador","2026-06-15T02:00","Philadelphia",1],["F","Sweden","Tunisia","2026-06-15T06:00","Monterrey",1],
+ ["H","Spain","CapeVerde","2026-06-15T19:00","Atlanta",1],["G","Belgium","Egypt","2026-06-16T01:00","Vancouver",1],
+ ["H","SaudiArabia","Uruguay","2026-06-16T01:00","Miami",1],["G","Iran","NewZealand","2026-06-16T07:00","Los Angeles",1],
+ ["I","France","Senegal","2026-06-16T22:00","New Jersey",1],["I","Iraq","Norway","2026-06-17T01:00","Boston",1],
+ ["J","Argentina","Algeria","2026-06-17T05:00","Kansas City",1],["J","Austria","Jordan","2026-06-17T10:00","San Francisco",1],
+ ["K","Portugal","DRCongo","2026-06-17T21:00","Houston",1],["L","England","Croatia","2026-06-18T00:00","Dallas",1],
+ ["L","Ghana","Panama","2026-06-18T02:00","Toronto",1],["K","Uzbekistan","Colombia","2026-06-18T06:00","Mexico-Stadt",1],
+ ["A","Czechia","SouthAfrica","2026-06-18T19:00","Atlanta",2],["B","Switzerland","Bosnia","2026-06-19T01:00","Los Angeles",2],
+ ["B","Canada","Qatar","2026-06-19T04:00","Vancouver",2],["A","Mexico","SouthKorea","2026-06-19T05:00","Guadalajara",2],
+ ["C","Scotland","Morocco","2026-06-20T01:00","Boston",2],["D","USA","Australia","2026-06-20T01:00","Seattle",2],
+ ["C","Brazil","Haiti","2026-06-20T04:00","Philadelphia",2],["D","Turkiye","Paraguay","2026-06-20T10:00","San Francisco",2],
+ ["F","Netherlands","Sweden","2026-06-20T21:00","Houston",2],["E","Germany","IvoryCoast","2026-06-20T23:00","Toronto",2],
+ ["E","Ecuador","Curacao","2026-06-21T06:00","Kansas City",2],["F","Tunisia","Japan","2026-06-21T08:00","Monterrey",2],
+ ["H","Spain","SaudiArabia","2026-06-21T19:00","Atlanta",2],["G","Belgium","Iran","2026-06-22T01:00","Los Angeles",2],
+ ["H","Uruguay","CapeVerde","2026-06-22T01:00","Miami",2],["G","NewZealand","Egypt","2026-06-22T07:00","Vancouver",2],
+ ["J","Argentina","Austria","2026-06-22T21:00","Dallas",2],["I","France","Iraq","2026-06-23T00:00","Philadelphia",2],
+ ["I","Norway","Senegal","2026-06-23T03:00","New Jersey",2],["J","Jordan","Algeria","2026-06-23T09:00","San Francisco",2],
+ ["K","Portugal","Uzbekistan","2026-06-23T21:00","Houston",2],["L","England","Ghana","2026-06-23T23:00","Boston",2],
+ ["L","Panama","Croatia","2026-06-24T02:00","Toronto",2],["K","Colombia","DRCongo","2026-06-24T06:00","Guadalajara",2],
+ ["B","Switzerland","Canada","2026-06-25T01:00","Vancouver",3],["B","Bosnia","Qatar","2026-06-25T01:00","Seattle",3],
+ ["C","Scotland","Brazil","2026-06-25T01:00","Miami",3],["C","Morocco","Haiti","2026-06-25T01:00","Atlanta",3],
+ ["A","Czechia","Mexico","2026-06-25T05:00","Mexico-Stadt",3],["A","SouthAfrica","SouthKorea","2026-06-25T05:00","Monterrey",3],
+ ["E","Ecuador","Germany","2026-06-25T23:00","New Jersey",3],["E","Curacao","IvoryCoast","2026-06-25T23:00","Philadelphia",3],
+ ["F","Japan","Sweden","2026-06-26T03:00","Dallas",3],["F","Tunisia","Netherlands","2026-06-26T03:00","Kansas City",3],
+ ["D","Turkiye","USA","2026-06-26T08:00","Los Angeles",3],["D","Paraguay","Australia","2026-06-26T08:00","San Francisco",3],
+ ["I","Norway","France","2026-06-26T22:00","Boston",3],["I","Senegal","Iraq","2026-06-26T22:00","Toronto",3],
+ ["H","CapeVerde","SaudiArabia","2026-06-27T04:00","Houston",3],["H","Uruguay","Spain","2026-06-27T04:00","Guadalajara",3],
+ ["G","Egypt","Iran","2026-06-27T09:00","Seattle",3],["G","NewZealand","Belgium","2026-06-27T09:00","Vancouver",3],
+ ["L","Panama","England","2026-06-28T00:00","New Jersey",3],["L","Croatia","Ghana","2026-06-28T00:00","Philadelphia",3],
+ ["K","Colombia","Portugal","2026-06-28T04:30","Miami",3],["K","DRCongo","Uzbekistan","2026-06-28T04:30","Atlanta",3],
+ ["J","Algeria","Austria","2026-06-28T06:00","Kansas City",3],["J","Jordan","Argentina","2026-06-28T06:00","Dallas",3]
+].map((x,i)=>({id:i,g:x[0],h:x[1],a:x[2],dt:x[3],venue:x[4],md:x[5]}));
+const H2H={"England|Croatia":"EM 2021 (Gr.): England 1:0 · WM18-HF: Kroatien","Panama|England":"WM 2018 (Gr.): England 6:1","France|Senegal":"WM 2002 (Eröffnung): Senegal 1:0","Brazil|Morocco":"Test 03/2023: Marokko 2:1","Mexico|SouthKorea":"WM 2018 (Gr.): Mexiko 2:1"};
+const SWISSREL=new Set(["Switzerland"]);
+
+/* =================================================== MODEL (Poisson × Dixon-Coles) */
+function pois(l,k){let p=Math.exp(-l);for(let i=1;i<=k;i++)p*=l/i;return p;}
+const ELO={Mexico:1975,SouthAfrica:1661,SouthKorea:1879,Czechia:1800,Canada:1894,Switzerland:1954,Qatar:1565,Bosnia:1650,Brazil:2067,Morocco:1984,Haiti:1696,Scotland:1842,USA:1824,Australia:1899,Paraguay:1917,Turkiye:1967,Germany:2002,Curacao:1601,IvoryCoast:1814,Ecuador:2025,Netherlands:2009,Japan:1992,Sweden:1769,Tunisia:1737,Belgium:1955,Egypt:1809,Iran:1896,NewZealand:1720,Spain:2217,CapeVerde:1652,SaudiArabia:1685,Uruguay:1973,France:2123,Senegal:1918,Iraq:1749,Norway:1969,Argentina:2187,Algeria:1872,Austria:1888,Jordan:1774,Portugal:2040,DRCongo:1772,Uzbekistan:1819,Colombia:2062,England:2084,Croatia:1968,Ghana:1624,Panama:1847};
+Object.keys(ELO).forEach(k=>{if(T[k])T[k].r=ELO[k];});  // datebasierti Elo ersetzt Hand-Ratings
+function ratingOf(k){return T[k].r;}
+const MU=1.258, GAMMA=0.00209;  // datebasiert gefittet aus 5847 moderne neutrale Länderspiele
+function lambdas(hk,ak){
+  const d=ratingOf(hk)-ratingOf(ak);
+  return [Math.max(0.05,Math.min(4.0,MU*Math.exp(GAMMA*d))), Math.max(0.05,Math.min(4.0,MU*Math.exp(-GAMMA*d)))]; // Deckel 4.0 = empirischi Sättigung bi extreme Mismatches
+}
+const MAXG=7, RHO=-0.10;                   // Dixon-Coles low-score Korrektur
+function buildMatrix(hk,ak){
+  const [lh,la]=lambdas(hk,ak); const m=[]; let sum=0;
+  for(let i=0;i<=MAXG;i++){m[i]=[];for(let j=0;j<=MAXG;j++){
+    let p=pois(lh,i)*pois(la,j), tau=1;
+    if(i===0&&j===0)tau=1-lh*la*RHO; else if(i===0&&j===1)tau=1+lh*RHO;
+    else if(i===1&&j===0)tau=1+la*RHO; else if(i===1&&j===1)tau=1-RHO;
+    p*=Math.max(0.0001,tau); m[i][j]=p; sum+=p;
+  }}
+  for(let i=0;i<=MAXG;i++)for(let j=0;j<=MAXG;j++)m[i][j]/=sum;
+  return m;
+}
+function tend(d){return d>0?1:d<0?-1:0;}
+function expPoints(th,ta,m){
+  let ep=0; const td=tend(th-ta);
+  for(let h=0;h<=MAXG;h++)for(let a=0;a<=MAXG;a++){
+    const p=m[h][a]; if(p<1e-6)continue; const rd=tend(h-a); let pts=0;
+    if(td===rd)pts+=5; if(th===h)pts+=1; if(ta===a)pts+=1; if(td===rd&&(th-ta)===(h-a))pts+=3;
+    ep+=p*pts;
+  } return ep;
+}
+function analyse(m){
+  let pw=0,pd=0,pl=0,best=-1,bh=0,ba=0;
+  let eh=0,ea=0;
+  for(let h=0;h<=MAXG;h++)for(let a=0;a<=MAXG;a++){
+    const p=m[h][a]; if(h>a)pw+=p;else if(h<a)pl+=p;else pd+=p;
+    eh+=h*p; ea+=a*p;
+    if(p>best){best=p;bh=h;ba=a;}
+  }
+  // Tipp = gerundeti erwarteti Tore (auf WM22/EM24 kalibriert: mehr Punkt + realistischeri Totale als argmax),
+  // mit Tendenz-Absicherig wenn ei Team klar favorisiert isch
+  let tH=Math.round(eh), tA=Math.round(ea); const d=eh-ea;
+  if(d>=0.5&&tH<=tA)tH=tA+1; else if(-d>=0.5&&tA<=tH)tA=tH+1;
+  return {pw,pd,pl,modal:[bh,ba],tip:[tH,tA]};
+}
+function buildCDF(m){const c=[];let acc=0;for(let i=0;i<=MAXG;i++)for(let j=0;j<=MAXG;j++){acc+=m[i][j];c.push([i,j,acc]);}return c;}
+function prepareMatches(){M.forEach(m=>{m.mat=buildMatrix(m.h,m.a);m.an=analyse(m.mat);m.cdf=buildCDF(m.mat);});}
+function sampleCDF(c){const r=Math.random();for(let k=0;k<c.length;k++)if(r<=c[k][2])return [c[k][0],c[k][1]];return [0,0];}
+
+/* =================================================== POINTS */
+function ptsFor(th,ta,rh,ra){ // Gruppenphase
+  let p=0; const td=tend(th-ta),rd=tend(rh-ra);
+  if(td===rd)p+=5; if(th===rh)p+=1; if(ta===ra)p+=1; if(td===rd&&(th-ta)===(rh-ra))p+=3; return p;
+}
+
+/* =================================================== STATE */
+let R={}; // id -> {th,ta,rh,ra}
+const SKEY="wm2026_v2", OLDKEY="wm2026_results_v1";
+async function loadResults(){
+  let raw=null;
+  try{ raw = window.storage ? (await window.storage.get(SKEY)||{}).value : localStorage.getItem(SKEY); }catch(e){ try{raw=localStorage.getItem(SKEY);}catch(_){} }
+  if(raw){ try{R=JSON.parse(raw);}catch(e){R={};} return; }
+  // Migration von v1 (nur Resultate -> rh/ra)
+  let old=null; try{ old = window.storage ? (await window.storage.get(OLDKEY)||{}).value : localStorage.getItem(OLDKEY); }catch(e){}
+  if(old){ try{const o=JSON.parse(old); Object.keys(o).forEach(id=>{R[id]={rh:o[id].h,ra:o[id].a};});}catch(e){} }
+}
+async function saveResults(){
+  const s=JSON.stringify(R);
+  try{ if(window.storage)await window.storage.set(SKEY,s); else localStorage.setItem(SKEY,s); }catch(e){ try{localStorage.setItem(SKEY,s);}catch(_){} }
+}
+
+/* =================================================== SCHEDULE */
+const DOW=["So","Mo","Di","Mi","Do","Fr","Sa"];
+function D(iso){return new Date(iso+":00+02:00");}
+function fmtDate(iso){const d=D(iso);return `${DOW[d.getDay()]} ${String(d.getDate()).padStart(2,"0")}.${String(d.getMonth()+1).padStart(2,"0")}.`;}
+function fmtTime(iso){const d=D(iso);return `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;}
+function dayKey(iso){return D(iso).toISOString().slice(0,10);}
+function isLocked(iso){return Date.now()>=D(iso).getTime()-5*60000;}
+function teamHTML(k){return `<span class="team" data-team="${k}"><span class="fl">${FLAG[k]}</span>${NAME[k]}</span>`;}
+function num(v){return v===""||v==null?null:Math.max(0,Math.min(30,parseInt(v,10)));}
+
+function updateScoreboard(){
+  let total=0,cnt=0;
+  for(const m of M){const r=R[m.id]; if(r&&r.th!=null&&r.ta!=null&&r.rh!=null&&r.ra!=null){total+=ptsFor(r.th,r.ta,r.rh,r.ra);cnt++;}}
+  for(const m of KO){const r=KR[m.id]; if(r&&r.th!=null&&r.ta!=null&&r.rh!=null&&r.ra!=null){total+=ptsKO(r.th,r.ta,r.rh,r.ra);cnt++;}}
+  document.getElementById("sbTotal").textContent=total;
+  document.getElementById("sbCount").textContent=cnt+" / 104";
+  document.getElementById("sbAvg").textContent=cnt?(total/cnt).toFixed(2):"–";
+}
+function renderSchedule(){
+  const body=document.getElementById("scheduleBody");
+  const gf=document.getElementById("grpFilter").value;
+  const so=document.getElementById("swissOnly").checked;
+  const hd=document.getElementById("hideDone").checked;
+  let list=M.filter(m=>{
+    if(gf!=="all"&&m.g!==gf)return false;
+    if(so&&!(SWISSREL.has(m.h)||SWISSREL.has(m.a)))return false;
+    const r=R[m.id], scored=r&&r.th!=null&&r.ta!=null&&r.rh!=null&&r.ra!=null;
+    if(hd&&scored)return false; return true;
+  });
+  let html="",lastDay="";
+  for(const m of list){
+    const dk=dayKey(m.dt); if(dk!==lastDay){html+=`<div class="dayhead">${fmtDate(m.dt)}</div>`;lastDay=dk;}
+    const A=m.an, tot=A.pw+A.pd+A.pl, wW=A.pw/tot*100,wD=A.pd/tot*100,wL=A.pl/tot*100;
+    const swiss=(SWISSREL.has(m.h)||SWISSREL.has(m.a)), locked=isLocked(m.dt), r=R[m.id]||{};
+    const h2h=H2H[m.h+"|"+m.a];
+    let pt="",ptcls="empty";
+    if(r.th!=null&&r.ta!=null&&r.rh!=null&&r.ra!=null){const gp=ptsFor(r.th,r.ta,r.rh,r.ra);pt=`+${gp} P`;ptcls=gp>0?"":"zero";}
+    else if(r.th!=null&&r.ta!=null){pt="Tipp gsetzt";}
+    html+=`<div class="match${swiss?' swiss':''}">
+      <div class="m-time"><span class="t">${fmtTime(m.dt)}</span><span class="lock ${locked?'closed':'open'}">${locked?'Tipp zu':'Tipp offe'}</span></div>
+      <div class="m-main">
+        <div class="m-teams">${teamHTML(m.h)} <span class="vs">vs</span> ${teamHTML(m.a)} <span class="grp-badge">GR ${m.g}</span></div>
+        <div class="m-meta">
+          ${h2h?`<span class="h2h">⟳ ${h2h}</span>`:`<span class="h2h">⟳ keis WM22/EM24-Duell</span>`}
+        </div>
+        <div class="tiprec">Modell-Tipp <b>${A.tip[0]}:${A.tip[1]}</b><span class="copytip" data-copy="${m.id}">▣ übernäh</span></div>
+        <div class="probbar"><i class="pb-w" style="width:${wW}%"></i><i class="pb-d" style="width:${wD}%"></i><i class="pb-l" style="width:${wL}%"></i></div>
+      </div>
+      <div class="m-entry">
+        <div class="entry-row tip"><span class="elbl">Min Tipp</span>
+          <input type="number" inputmode="numeric" data-id="${m.id}" data-k="th" value="${r.th!=null?r.th:''}" placeholder="–">
+          <span class="dash">:</span>
+          <input type="number" inputmode="numeric" data-id="${m.id}" data-k="ta" value="${r.ta!=null?r.ta:''}" placeholder="–"></div>
+        <div class="entry-row res"><span class="elbl">Resultat</span>
+          <input type="number" inputmode="numeric" data-id="${m.id}" data-k="rh" value="${r.rh!=null?r.rh:''}" placeholder="–">
+          <span class="dash">:</span>
+          <input type="number" inputmode="numeric" data-id="${m.id}" data-k="ra" value="${r.ra!=null?r.ra:''}" placeholder="–"></div>
+        <div class="ptline ${ptcls}">${pt}</div>
+      </div>
+    </div>`;
+  }
+  if(!list.length)html=`<div class="note">Kei Spiel für die Uswahl.</div>`;
+  body.innerHTML=html;
+  body.querySelectorAll('input[data-id]').forEach(i=>i.addEventListener('input',onEntry));
+  body.querySelectorAll('.copytip').forEach(b=>b.addEventListener('click',onCopyTip));
+  updateScoreboard();
+}
+function onEntry(e){
+  const id=+e.target.dataset.id, k=e.target.dataset.k, v=num(e.target.value);
+  R[id]=R[id]||{}; if(v==null)delete R[id][k]; else R[id][k]=v;
+  if(Object.keys(R[id]).length===0)delete R[id];
+  saveResults(); updateScoreboard();
+  // nur Punktezeile dieses Spiels aktualisieren (kein Full-Rerender → Fokus bleibt)
+  const card=e.target.closest('.match'); const r=R[id]||{};
+  const pl=card.querySelector('.ptline');
+  if(r.th!=null&&r.ta!=null&&r.rh!=null&&r.ra!=null){const gp=ptsFor(r.th,r.ta,r.rh,r.ra);pl.textContent=`+${gp} P`;pl.className='ptline '+(gp>0?'':'zero');}
+  else if(r.th!=null&&r.ta!=null){pl.textContent='Tipp gsetzt';pl.className='ptline empty';}
+  else {pl.textContent='';pl.className='ptline empty';}
+}
+function onCopyTip(e){
+  const id=+e.target.dataset.copy, m=M[id];
+  R[id]=R[id]||{}; R[id].th=m.an.tip[0]; R[id].ta=m.an.tip[1];
+  saveResults();
+  const card=e.target.closest('.match');
+  card.querySelector('input[data-k="th"]').value=m.an.tip[0];
+  card.querySelector('input[data-k="ta"]').value=m.an.tip[1];
+  const r=R[id], pl=card.querySelector('.ptline');
+  if(r.rh!=null&&r.ra!=null){const gp=ptsFor(r.th,r.ta,r.rh,r.ra);pl.textContent=`+${gp} P`;pl.className='ptline '+(gp>0?'':'zero');}
+  else {pl.textContent='Tipp gsetzt';pl.className='ptline empty';}
+  updateScoreboard();
+}
+
+/* =================================================== TEAMS */
+function renderTeams(){
+  const body=document.getElementById("teamsBody");
+  const gf=document.getElementById("grpFilterT").value, sort=document.getElementById("sortT").value;
+  let keys=Object.keys(T).filter(k=>gf==="all"||T[k].g===gf);
+  keys.sort(sort==="rating"?(a,b)=>T[b].r-T[a].r:(a,b)=>T[a].g===T[b].g?T[b].r-T[a].r:(T[a].g<T[b].g?-1:1));
+  const ranked=Object.keys(T).sort((a,b)=>T[b].r-T[a].r);
+  let html="";
+  for(const k of keys){const t=T[k],rk=ranked.indexOf(k)+1;
+    html+=`<div class="tcard" id="tcard-${k}"><div class="th"><span class="fl" style="font-size:20px">${FLAG[k]}</span>
+      <span class="name">${NAME[k]}</span><span class="grp-badge">GR ${t.g}</span>
+      <span class="rk">Rang #${rk}/48</span><span class="rate">R <b>${t.r}</b></span></div>
+      <div class="tgrid"><div class="s"><span class="lbl">Stärken</span><b>+</b> ${t.s}</div>
+      <div class="w"><span class="lbl">Schwächen</span><b>−</b> ${t.w}</div></div>
+      <div class="keyinfo">⚑ ${t.k}</div><div class="hist">${t.wm}${t.em?"  ·  "+t.em:""}</div></div>`;
+  }
+  body.innerHTML=html;
+}
+
+/* =================================================== SIMULATION + STANDINGS */
+const GROUPS={};Object.keys(T).forEach(k=>{(GROUPS[T[k].g]=GROUPS[T[k].g]||[]).push(k);});
+const GL=Object.keys(GROUPS).sort();
+let ADV={};
+function currentStandings(){
+  const st={};Object.keys(T).forEach(k=>st[k]={p:0,gf:0,ga:0,gd:0,pl:0});
+  for(const m of M){const r=R[m.id];if(!r||r.rh==null||r.ra==null)continue;
+    st[m.h].pl++;st[m.a].pl++;st[m.h].gf+=r.rh;st[m.h].ga+=r.ra;st[m.a].gf+=r.ra;st[m.a].ga+=r.rh;
+    if(r.rh>r.ra)st[m.h].p+=3;else if(r.rh<r.ra)st[m.a].p+=3;else{st[m.h].p++;st[m.a].p++;}}
+  Object.keys(st).forEach(k=>st[k].gd=st[k].gf-st[k].ga); return st;
+}
+function sortGroup(keys,st){return keys.slice().sort((a,b)=>st[b].p-st[a].p||st[b].gd-st[a].gd||st[b].gf-st[a].gf||(T[b].r-T[a].r));}
+function simulate(N){
+  const adv={};Object.keys(T).forEach(k=>adv[k]=0);
+  for(let s=0;s<N;s++){
+    const st={};Object.keys(T).forEach(k=>st[k]={p:0,gf:0,ga:0});
+    for(const m of M){let rh,ra;const r=R[m.id];
+      if(r&&r.rh!=null&&r.ra!=null){rh=r.rh;ra=r.ra;}else{[rh,ra]=sampleCDF(m.cdf);}
+      st[m.h].gf+=rh;st[m.h].ga+=ra;st[m.a].gf+=ra;st[m.a].ga+=rh;
+      if(rh>ra)st[m.h].p+=3;else if(rh<ra)st[m.a].p+=3;else{st[m.h].p++;st[m.a].p++;}}
+    Object.keys(st).forEach(k=>st[k].gd=st[k].gf-st[k].ga);
+    const thirds=[];
+    for(const g of GL){
+      const rk=GROUPS[g].slice().sort((a,b)=>st[b].p-st[a].p||st[b].gd-st[a].gd||st[b].gf-st[a].gf||(Math.random()-0.5));
+      adv[rk[0]]++;adv[rk[1]]++; thirds.push({k:rk[2],p:st[rk[2]].p,gd:st[rk[2]].gd,gf:st[rk[2]].gf});
+    }
+    thirds.sort((a,b)=>b.p-a.p||b.gd-a.gd||b.gf-a.gf||(Math.random()-0.5));
+    for(let i=0;i<8;i++)adv[thirds[i].k]++;
+  }
+  Object.keys(adv).forEach(k=>adv[k]/=N); return adv;
+}
+function renderStandings(){
+  const st=currentStandings(), body=document.getElementById("standingsBody"); let html="";
+  for(const g of GL){const rk=sortGroup(GROUPS[g],st);
+    html+=`<div class="stgroup"><h3>Gruppe ${g}</h3><table class="st"><thead><tr>
+      <th class="l">Team</th><th>Sp</th><th>P</th><th>TD</th><th>Goals</th><th>% AF</th></tr></thead><tbody>`;
+    rk.forEach((k,i)=>{const s=st[k],pc=ADV[k]!=null?Math.round(ADV[k]*100):null;
+      html+=`<tr class="${i<2?'qual':''}"><td class="l">${FLAG[k]} ${NAME[k]}</td><td>${s.pl}</td><td><b>${s.p}</b></td>
+        <td>${s.gd>0?'+':''}${s.gd}</td><td>${s.gf}:${s.ga}</td><td class="adv"><span class="pct">${pc!=null?pc+'%':'–'}</span></td></tr>`;});
+    html+=`</tbody></table></div>`;}
+  body.innerHTML=html;
+}
+
+/* =================================================== WIRING */
+function buildSelects(){for(const id of ["grpFilter","grpFilterT"]){const sel=document.getElementById(id);
+  GL.forEach(g=>{const o=document.createElement("option");o.value=g;o.textContent="Gruppe "+g;sel.appendChild(o);});}}
+function switchView(v){
+  document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active",t.dataset.view===v));
+  ["schedule","teams","standings","ko","modell"].forEach(x=>document.getElementById("view-"+x).classList.toggle("hidden",x!==v));
+  if(v==="teams")renderTeams(); if(v==="standings")renderStandings(); if(v==="ko")renderKO(); if(v==="modell")renderModell();
+}
+function deferSim(n){setTimeout(()=>{try{ADV=simulate(n);}catch(e){ADV={};}
+  if(!document.getElementById("view-standings").classList.contains("hidden"))renderStandings();},60);}
+async function recalc(){
+  const b=document.getElementById("recalcBtn");b.innerHTML='<span class="spin"></span>rechne 50\u2019000…';b.disabled=true;
+  await new Promise(r=>setTimeout(r,50));
+  try{ADV=simulate(50000);}catch(e){ADV={};}
+  await saveResults(); renderStandings(); switchView("standings");
+  b.innerHTML='↻ Wahrschiinlichkeite neu berächne';b.disabled=false;
+}
+function renderModell(){
+  const sa=document.getElementById("modSelA"), sb=document.getElementById("modSelB");
+  if(!sa.options.length){
+    const keys=Object.keys(T).sort((a,b)=>NAME[a]<NAME[b]?-1:1);
+    const opts=keys.map(k=>`<option value="${k}">${FLAG[k]} ${NAME[k]}</option>`).join("");
+    sa.innerHTML=opts; sb.innerHTML=opts; sa.value="Spain"; sb.value="CapeVerde";
+    sa.addEventListener("change",renderModellCalc); sb.addEventListener("change",renderModellCalc);
+  }
+  renderModellCalc();
+}
+function renderModellCalc(){
+  const a=document.getElementById("modSelA").value, b=document.getElementById("modSelB").value;
+  const out=document.getElementById("modCalcOut");
+  const Ra=Math.round(ratingOf(a)), Rb=Math.round(ratingOf(b));
+  const lam=lambdas(a,b), m=buildMatrix(a,b), A=analyse(m), tot=A.pw+A.pd+A.pl;
+  let cells=[]; for(let i=0;i<=5;i++)for(let j=0;j<=5;j++)cells.push([i,j,m[i][j]]);
+  cells.sort((x,y)=>y[2]-x[2]);
+  const rows=cells.slice(0,7).map(c=>`<tr><td>${c[0]}:${c[1]}</td><td>${(100*c[2]).toFixed(1)}%</td></tr>`).join("");
+  out.innerHTML=
+   `<div class="mcrow"><span>Elo-Stärki</span><span style="color:var(--ink)">${NAME[a]} <b>${Ra}</b> &nbsp;·&nbsp; ${NAME[b]} <b>${Rb}</b> &nbsp;(Δ ${Math.abs(Ra-Rb)})</span></div>`+
+   `<div class="mcrow"><span>Erwarteti Goals λ</span><b>${lam[0].toFixed(2)} : ${lam[1].toFixed(2)}</b></div>`+
+   `<div class="mcrow"><span>Sieg ${NAME[a]} / Remis / Sieg ${NAME[b]}</span><span style="color:var(--ink)">${Math.round(100*A.pw/tot)}% / ${Math.round(100*A.pd/tot)}% / ${Math.round(100*A.pl/tot)}%</span></div>`+
+   `<div class="mcrow tipbig"><span>Modell-Tipp</span><b>${A.tip[0]} : ${A.tip[1]}</b></div>`+
+   `<table class="msc"><tr><th>Wahrscheinlichschti Resultat</th><th></th></tr>${rows}</table>`;
+}
+document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>switchView(t.dataset.view)));
+document.addEventListener("click",function(e){var el=e.target.closest?e.target.closest("[data-team]"):null;if(!el)return;var k=el.getAttribute("data-team");if(!T[k])return;var gf=document.getElementById("grpFilterT");if(gf)gf.value="all";switchView("teams");var c=document.getElementById("tcard-"+k);if(c){c.scrollIntoView({behavior:"smooth",block:"center"});c.classList.add("flash");setTimeout(function(){c.classList.remove("flash");},1600);}});
+["grpFilter","swissOnly","hideDone"].forEach(id=>document.getElementById(id).addEventListener("change",renderSchedule));
+["grpFilterT","sortT"].forEach(id=>document.getElementById(id).addEventListener("change",renderTeams));
+document.getElementById("recalcBtn").addEventListener("click",recalc);
+document.getElementById("resetBtn").addEventListener("click",async()=>{
+  if(confirm("Alli iigetragene Tipps und Resultat lösche?")){R={};KR={};await saveResults();koSave();renderSchedule();renderKO();ADV={};deferSim(10000);}
+});
+
+/* ===== Tipps exportiere / importiere (localStorage <-> JSON-Datei) ===== */
+const EXPORT_PREFIX="wm2026";
+function collectTippData(){
+  const data={};
+  for(let i=0;i<localStorage.length;i++){
+    const k=localStorage.key(i);
+    if(k&&k.startsWith(EXPORT_PREFIX))data[k]=localStorage.getItem(k);
+  }
+  return data;
+}
+document.getElementById("exportBtn").addEventListener("click",()=>{
+  try{
+    const data=collectTippData();
+    if(Object.keys(data).length===0){alert("No kei Tipps zum Exportiere da.");return;}
+    const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement("a");
+    const d=new Date(),pad=n=>String(n).padStart(2,"0");
+    a.href=url;
+    a.download=`wm2026-tipps-${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}.json`;
+    document.body.appendChild(a);a.click();a.remove();
+    URL.revokeObjectURL(url);
+  }catch(e){alert("Export fehlgschlage: "+e.message);}
+});
+document.getElementById("importBtn").addEventListener("click",()=>document.getElementById("importFile").click());
+document.getElementById("importFile").addEventListener("change",async e=>{
+  const file=e.target.files&&e.target.files[0];
+  e.target.value="";
+  if(!file)return;
+  try{
+    const data=JSON.parse(await file.text());
+    if(!data||typeof data!=="object"||Array.isArray(data))throw new Error("ungültigs Datei-Format");
+    const keys=Object.keys(data).filter(k=>k.startsWith(EXPORT_PREFIX)&&typeof data[k]==="string");
+    if(keys.length===0)throw new Error("kei wm2026-Tipps i de Datei gfunde");
+    if(!confirm(keys.length+" Iiträg gfunde. Bestehendi Tipps werded überschribe — witermache?"))return;
+    keys.forEach(k=>localStorage.setItem(k,data[k]));
+    R={};KR={};
+    await loadResults();koLoad();
+    renderSchedule();renderKO();updateScoreboard();
+    ADV={};deferSim(10000);
+    alert("Tipps erfolgriich importiert!");
+  }catch(err){alert("Import fehlgschlage: "+err.message);}
+});
+
+/* ===== Annex C: 495 Dritt-Plazierte-Kombinatione ===== */
+const TP3={"EFGHIJKL":"EJIFHGLK","DFGHIJKL":"HGIDJFLK","DEGHIJKL":"EJIDHGLK","DEFHIJKL":"EJIDHFLK","DEFGIJKL":"EGIDJFLK","DEFGHJKL":"EGJDHFLK","DEFGHIKL":"EGIDHFLK","DEFGHIJL":"EGJDHFLI","DEFGHIJK":"EGJDHFIK","CFGHIJKL":"HGICJFLK","CEGHIJKL":"EJICHGLK","CEFHIJKL":"EJICHFLK","CEFGIJKL":"EGICJFLK","CEFGHJKL":"EGJCHFLK","CEFGHIKL":"EGICHFLK","CEFGHIJL":"EGJCHFLI","CEFGHIJK":"EGJCHFIK","CDGHIJKL":"HGICJDLK","CDFHIJKL":"CJIDHFLK","CDFGIJKL":"CGIDJFLK","CDFGHJKL":"CGJDHFLK","CDFGHIKL":"CGIDHFLK","CDFGHIJL":"CGJDHFLI","CDFGHIJK":"CGJDHFIK","CDEHIJKL":"EJICHDLK","CDEGIJKL":"EGICJDLK","CDEGHJKL":"EGJCHDLK","CDEGHIKL":"EGICHDLK","CDEGHIJL":"EGJCHDLI","CDEGHIJK":"EGJCHDIK","CDEFIJKL":"CJEDIFLK","CDEFHJKL":"CJEDHFLK","CDEFHIKL":"CEIDHFLK","CDEFHIJL":"CJEDHFLI","CDEFHIJK":"CJEDHFIK","CDEFGJKL":"CGEDJFLK","CDEFGIKL":"CGEDIFLK","CDEFGIJL":"CGEDJFLI","CDEFGIJK":"CGEDJFIK","CDEFGHKL":"CGEDHFLK","CDEFGHJL":"CGJDHFLE","CDEFGHJK":"CGJDHFEK","CDEFGHIL":"CGEDHFLI","CDEFGHIK":"CGEDHFIK","CDEFGHIJ":"CGJDHFEI","BFGHIJKL":"HJBFIGLK","BEGHIJKL":"EJIBHGLK","BEFHIJKL":"EJBFIHLK","BEFGIJKL":"EJBFIGLK","BEFGHJKL":"EJBFHGLK","BEFGHIKL":"EGBFIHLK","BEFGHIJL":"EJBFHGLI","BEFGHIJK":"EJBFHGIK","BDGHIJKL":"HJBDIGLK","BDFHIJKL":"HJBDIFLK","BDFGIJKL":"IGBDJFLK","BDFGHJKL":"HGBDJFLK","BDFGHIKL":"HGBDIFLK","BDFGHIJL":"HGBDJFLI","BDFGHIJK":"HGBDJFIK","BDEHIJKL":"EJBDIHLK","BDEGIJKL":"EJBDIGLK","BDEGHJKL":"EJBDHGLK","BDEGHIKL":"EGBDIHLK","BDEGHIJL":"EJBDHGLI","BDEGHIJK":"EJBDHGIK","BDEFIJKL":"EJBDIFLK","BDEFHJKL":"EJBDHFLK","BDEFHIKL":"EIBDHFLK","BDEFHIJL":"EJBDHFLI","BDEFHIJK":"EJBDHFIK","BDEFGJKL":"EGBDJFLK","BDEFGIKL":"EGBDIFLK","BDEFGIJL":"EGBDJFLI","BDEFGIJK":"EGBDJFIK","BDEFGHKL":"EGBDHFLK","BDEFGHJL":"HGBDJFLE","BDEFGHJK":"HGBDJFEK","BDEFGHIL":"EGBDHFLI","BDEFGHIK":"EGBDHFIK","BDEFGHIJ":"HGBDJFEI","BCGHIJKL":"HJBCIGLK","BCFHIJKL":"HJBCIFLK","BCFGIJKL":"IGBCJFLK","BCFGHJKL":"HGBCJFLK","BCFGHIKL":"HGBCIFLK","BCFGHIJL":"HGBCJFLI","BCFGHIJK":"HGBCJFIK","BCEHIJKL":"EJBCIHLK","BCEGIJKL":"EJBCIGLK","BCEGHJKL":"EJBCHGLK","BCEGHIKL":"EGBCIHLK","BCEGHIJL":"EJBCHGLI","BCEGHIJK":"EJBCHGIK","BCEFIJKL":"EJBCIFLK","BCEFHJKL":"EJBCHFLK","BCEFHIKL":"EIBCHFLK","BCEFHIJL":"EJBCHFLI","BCEFHIJK":"EJBCHFIK","BCEFGJKL":"EGBCJFLK","BCEFGIKL":"EGBCIFLK","BCEFGIJL":"EGBCJFLI","BCEFGIJK":"EGBCJFIK","BCEFGHKL":"EGBCHFLK","BCEFGHJL":"HGBCJFLE","BCEFGHJK":"HGBCJFEK","BCEFGHIL":"EGBCHFLI","BCEFGHIK":"EGBCHFIK","BCEFGHIJ":"HGBCJFEI","BCDHIJKL":"HJBCIDLK","BCDGIJKL":"IGBCJDLK","BCDGHJKL":"HGBCJDLK","BCDGHIKL":"HGBCIDLK","BCDGHIJL":"HGBCJDLI","BCDGHIJK":"HGBCJDIK","BCDFIJKL":"CJBDIFLK","BCDFHJKL":"CJBDHFLK","BCDFHIKL":"CIBDHFLK","BCDFHIJL":"CJBDHFLI","BCDFHIJK":"CJBDHFIK","BCDFGJKL":"CGBDJFLK","BCDFGIKL":"CGBDIFLK","BCDFGIJL":"CGBDJFLI","BCDFGIJK":"CGBDJFIK","BCDFGHKL":"CGBDHFLK","BCDFGHJL":"CGBDHFLJ","BCDFGHJK":"HGBCJFDK","BCDFGHIL":"CGBDHFLI","BCDFGHIK":"CGBDHFIK","BCDFGHIJ":"HGBCJFDI","BCDEIJKL":"EJBCIDLK","BCDEHJKL":"EJBCHDLK","BCDEHIKL":"EIBCHDLK","BCDEHIJL":"EJBCHDLI","BCDEHIJK":"EJBCHDIK","BCDEGJKL":"EGBCJDLK","BCDEGIKL":"EGBCIDLK","BCDEGIJL":"EGBCJDLI","BCDEGIJK":"EGBCJDIK","BCDEGHKL":"EGBCHDLK","BCDEGHJL":"HGBCJDLE","BCDEGHJK":"HGBCJDEK","BCDEGHIL":"EGBCHDLI","BCDEGHIK":"EGBCHDIK","BCDEGHIJ":"HGBCJDEI","BCDEFJKL":"CJBDEFLK","BCDEFIKL":"CEBDIFLK","BCDEFIJL":"CJBDEFLI","BCDEFIJK":"CJBDEFIK","BCDEFHKL":"CEBDHFLK","BCDEFHJL":"CJBDHFLE","BCDEFHJK":"CJBDHFEK","BCDEFHIL":"CEBDHFLI","BCDEFHIK":"CEBDHFIK","BCDEFHIJ":"CJBDHFEI","BCDEFGKL":"CGBDEFLK","BCDEFGJL":"CGBDJFLE","BCDEFGJK":"CGBDJFEK","BCDEFGIL":"CGBDEFLI","BCDEFGIK":"CGBDEFIK","BCDEFGIJ":"CGBDJFEI","BCDEFGHL":"CGBDHFLE","BCDEFGHK":"CGBDHFEK","BCDEFGHJ":"HGBCJFDE","BCDEFGHI":"CGBDHFEI","AFGHIJKL":"HJIFAGLK","AEGHIJKL":"EJIAHGLK","AEFHIJKL":"EJIFAHLK","AEFGIJKL":"EJIFAGLK","AEFGHJKL":"EGJFAHLK","AEFGHIKL":"EGIFAHLK","AEFGHIJL":"EGJFAHLI","AEFGHIJK":"EGJFAHIK","ADGHIJKL":"HJIDAGLK","ADFHIJKL":"HJIDAFLK","ADFGIJKL":"IGJDAFLK","ADFGHJKL":"HGJDAFLK","ADFGHIKL":"HGIDAFLK","ADFGHIJL":"HGJDAFLI","ADFGHIJK":"HGJDAFIK","ADEHIJKL":"EJIDAHLK","ADEGIJKL":"EJIDAGLK","ADEGHJKL":"EGJDAHLK","ADEGHIKL":"EGIDAHLK","ADEGHIJL":"EGJDAHLI","ADEGHIJK":"EGJDAHIK","ADEFIJKL":"EJIDAFLK","ADEFHJKL":"HJEDAFLK","ADEFHIKL":"HEIDAFLK","ADEFHIJL":"HJEDAFLI","ADEFHIJK":"HJEDAFIK","ADEFGJKL":"EGJDAFLK","ADEFGIKL":"EGIDAFLK","ADEFGIJL":"EGJDAFLI","ADEFGIJK":"EGJDAFIK","ADEFGHKL":"HGEDAFLK","ADEFGHJL":"HGJDAFLE","ADEFGHJK":"HGJDAFEK","ADEFGHIL":"HGEDAFLI","ADEFGHIK":"HGEDAFIK","ADEFGHIJ":"HGJDAFEI","ACGHIJKL":"HJICAGLK","ACFHIJKL":"HJICAFLK","ACFGIJKL":"IGJCAFLK","ACFGHJKL":"HGJCAFLK","ACFGHIKL":"HGICAFLK","ACFGHIJL":"HGJCAFLI","ACFGHIJK":"HGJCAFIK","ACEHIJKL":"EJICAHLK","ACEGIJKL":"EJICAGLK","ACEGHJKL":"EGJCAHLK","ACEGHIKL":"EGICAHLK","ACEGHIJL":"EGJCAHLI","ACEGHIJK":"EGJCAHIK","ACEFIJKL":"EJICAFLK","ACEFHJKL":"HJECAFLK","ACEFHIKL":"HEICAFLK","ACEFHIJL":"HJECAFLI","ACEFHIJK":"HJECAFIK","ACEFGJKL":"EGJCAFLK","ACEFGIKL":"EGICAFLK","ACEFGIJL":"EGJCAFLI","ACEFGIJK":"EGJCAFIK","ACEFGHKL":"HGECAFLK","ACEFGHJL":"HGJCAFLE","ACEFGHJK":"HGJCAFEK","ACEFGHIL":"HGECAFLI","ACEFGHIK":"HGECAFIK","ACEFGHIJ":"HGJCAFEI","ACDHIJKL":"HJICADLK","ACDGIJKL":"IGJCADLK","ACDGHJKL":"HGJCADLK","ACDGHIKL":"HGICADLK","ACDGHIJL":"HGJCADLI","ACDGHIJK":"HGJCADIK","ACDFIJKL":"CJIDAFLK","ACDFHJKL":"HJFCADLK","ACDFHIKL":"HFICADLK","ACDFHIJL":"HJFCADLI","ACDFHIJK":"HJFCADIK","ACDFGJKL":"CGJDAFLK","ACDFGIKL":"CGIDAFLK","ACDFGIJL":"CGJDAFLI","ACDFGIJK":"CGJDAFIK","ACDFGHKL":"HGFCADLK","ACDFGHJL":"CGJDAFLH","ACDFGHJK":"HGJCAFDK","ACDFGHIL":"HGFCADLI","ACDFGHIK":"HGFCADIK","ACDFGHIJ":"HGJCAFDI","ACDEIJKL":"EJICADLK","ACDEHJKL":"HJECADLK","ACDEHIKL":"HEICADLK","ACDEHIJL":"HJECADLI","ACDEHIJK":"HJECADIK","ACDEGJKL":"EGJCADLK","ACDEGIKL":"EGICADLK","ACDEGIJL":"EGJCADLI","ACDEGIJK":"EGJCADIK","ACDEGHKL":"HGECADLK","ACDEGHJL":"HGJCADLE","ACDEGHJK":"HGJCADEK","ACDEGHIL":"HGECADLI","ACDEGHIK":"HGECADIK","ACDEGHIJ":"HGJCADEI","ACDEFJKL":"CJEDAFLK","ACDEFIKL":"CEIDAFLK","ACDEFIJL":"CJEDAFLI","ACDEFIJK":"CJEDAFIK","ACDEFHKL":"HEFCADLK","ACDEFHJL":"HJFCADLE","ACDEFHJK":"HJECAFDK","ACDEFHIL":"HEFCADLI","ACDEFHIK":"HEFCADIK","ACDEFHIJ":"HJECAFDI","ACDEFGKL":"CGEDAFLK","ACDEFGJL":"CGJDAFLE","ACDEFGJK":"CGJDAFEK","ACDEFGIL":"CGEDAFLI","ACDEFGIK":"CGEDAFIK","ACDEFGIJ":"CGJDAFEI","ACDEFGHL":"HGFCADLE","ACDEFGHK":"HGECAFDK","ACDEFGHJ":"HGJCAFDE","ACDEFGHI":"HGECAFDI","ABGHIJKL":"HJBAIGLK","ABFHIJKL":"HJBAIFLK","ABFGIJKL":"IJBFAGLK","ABFGHJKL":"HJBFAGLK","ABFGHIKL":"HGBAIFLK","ABFGHIJL":"HJBFAGLI","ABFGHIJK":"HJBFAGIK","ABEHIJKL":"EJBAIHLK","ABEGIJKL":"EJBAIGLK","ABEGHJKL":"EJBAHGLK","ABEGHIKL":"EGBAIHLK","ABEGHIJL":"EJBAHGLI","ABEGHIJK":"EJBAHGIK","ABEFIJKL":"EJBAIFLK","ABEFHJKL":"EJBFAHLK","ABEFHIKL":"EIBFAHLK","ABEFHIJL":"EJBFAHLI","ABEFHIJK":"EJBFAHIK","ABEFGJKL":"EJBFAGLK","ABEFGIKL":"EGBAIFLK","ABEFGIJL":"EJBFAGLI","ABEFGIJK":"EJBFAGIK","ABEFGHKL":"EGBFAHLK","ABEFGHJL":"HJBFAGLE","ABEFGHJK":"HJBFAGEK","ABEFGHIL":"EGBFAHLI","ABEFGHIK":"EGBFAHIK","ABEFGHIJ":"HJBFAGEI","ABDHIJKL":"IJBDAHLK","ABDGIJKL":"IJBDAGLK","ABDGHJKL":"HJBDAGLK","ABDGHIKL":"IGBDAHLK","ABDGHIJL":"HJBDAGLI","ABDGHIJK":"HJBDAGIK","ABDFIJKL":"IJBDAFLK","ABDFHJKL":"HJBDAFLK","ABDFHIKL":"HIBDAFLK","ABDFHIJL":"HJBDAFLI","ABDFHIJK":"HJBDAFIK","ABDFGJKL":"FJBDAGLK","ABDFGIKL":"IGBDAFLK","ABDFGIJL":"FJBDAGLI","ABDFGIJK":"FJBDAGIK","ABDFGHKL":"HGBDAFLK","ABDFGHJL":"HGBDAFLJ","ABDFGHJK":"HGBDAFJK","ABDFGHIL":"HGBDAFLI","ABDFGHIK":"HGBDAFIK","ABDFGHIJ":"HGBDAFIJ","ABDEIJKL":"EJBAIDLK","ABDEHJKL":"EJBDAHLK","ABDEHIKL":"EIBDAHLK","ABDEHIJL":"EJBDAHLI","ABDEHIJK":"EJBDAHIK","ABDEGJKL":"EJBDAGLK","ABDEGIKL":"EGBAIDLK","ABDEGIJL":"EJBDAGLI","ABDEGIJK":"EJBDAGIK","ABDEGHKL":"EGBDAHLK","ABDEGHJL":"HJBDAGLE","ABDEGHJK":"HJBDAGEK","ABDEGHIL":"EGBDAHLI","ABDEGHIK":"EGBDAHIK","ABDEGHIJ":"HJBDAGEI","ABDEFJKL":"EJBDAFLK","ABDEFIKL":"EIBDAFLK","ABDEFIJL":"EJBDAFLI","ABDEFIJK":"EJBDAFIK","ABDEFHKL":"HEBDAFLK","ABDEFHJL":"HJBDAFLE","ABDEFHJK":"HJBDAFEK","ABDEFHIL":"HEBDAFLI","ABDEFHIK":"HEBDAFIK","ABDEFHIJ":"HJBDAFEI","ABDEFGKL":"EGBDAFLK","ABDEFGJL":"EGBDAFLJ","ABDEFGJK":"EGBDAFJK","ABDEFGIL":"EGBDAFLI","ABDEFGIK":"EGBDAFIK","ABDEFGIJ":"EGBDAFIJ","ABDEFGHL":"HGBDAFLE","ABDEFGHK":"HGBDAFEK","ABDEFGHJ":"HGBDAFEJ","ABDEFGHI":"HGBDAFEI","ABCHIJKL":"IJBCAHLK","ABCGIJKL":"IJBCAGLK","ABCGHJKL":"HJBCAGLK","ABCGHIKL":"IGBCAHLK","ABCGHIJL":"HJBCAGLI","ABCGHIJK":"HJBCAGIK","ABCFIJKL":"IJBCAFLK","ABCFHJKL":"HJBCAFLK","ABCFHIKL":"HIBCAFLK","ABCFHIJL":"HJBCAFLI","ABCFHIJK":"HJBCAFIK","ABCFGJKL":"CJBFAGLK","ABCFGIKL":"IGBCAFLK","ABCFGIJL":"CJBFAGLI","ABCFGIJK":"CJBFAGIK","ABCFGHKL":"HGBCAFLK","ABCFGHJL":"HGBCAFLJ","ABCFGHJK":"HGBCAFJK","ABCFGHIL":"HGBCAFLI","ABCFGHIK":"HGBCAFIK","ABCFGHIJ":"HGBCAFIJ","ABCEIJKL":"EJBAICLK","ABCEHJKL":"EJBCAHLK","ABCEHIKL":"EIBCAHLK","ABCEHIJL":"EJBCAHLI","ABCEHIJK":"EJBCAHIK","ABCEGJKL":"EJBCAGLK","ABCEGIKL":"EGBAICLK","ABCEGIJL":"EJBCAGLI","ABCEGIJK":"EJBCAGIK","ABCEGHKL":"EGBCAHLK","ABCEGHJL":"HJBCAGLE","ABCEGHJK":"HJBCAGEK","ABCEGHIL":"EGBCAHLI","ABCEGHIK":"EGBCAHIK","ABCEGHIJ":"HJBCAGEI","ABCEFJKL":"EJBCAFLK","ABCEFIKL":"EIBCAFLK","ABCEFIJL":"EJBCAFLI","ABCEFIJK":"EJBCAFIK","ABCEFHKL":"HEBCAFLK","ABCEFHJL":"HJBCAFLE","ABCEFHJK":"HJBCAFEK","ABCEFHIL":"HEBCAFLI","ABCEFHIK":"HEBCAFIK","ABCEFHIJ":"HJBCAFEI","ABCEFGKL":"EGBCAFLK","ABCEFGJL":"EGBCAFLJ","ABCEFGJK":"EGBCAFJK","ABCEFGIL":"EGBCAFLI","ABCEFGIK":"EGBCAFIK","ABCEFGIJ":"EGBCAFIJ","ABCEFGHL":"HGBCAFLE","ABCEFGHK":"HGBCAFEK","ABCEFGHJ":"HGBCAFEJ","ABCEFGHI":"HGBCAFEI","ABCDIJKL":"IJBCADLK","ABCDHJKL":"HJBCADLK","ABCDHIKL":"HIBCADLK","ABCDHIJL":"HJBCADLI","ABCDHIJK":"HJBCADIK","ABCDGJKL":"CJBDAGLK","ABCDGIKL":"IGBCADLK","ABCDGIJL":"CJBDAGLI","ABCDGIJK":"CJBDAGIK","ABCDGHKL":"HGBCADLK","ABCDGHJL":"HGBCADLJ","ABCDGHJK":"HGBCADJK","ABCDGHIL":"HGBCADLI","ABCDGHIK":"HGBCADIK","ABCDGHIJ":"HGBCADIJ","ABCDFJKL":"CJBDAFLK","ABCDFIKL":"CIBDAFLK","ABCDFIJL":"CJBDAFLI","ABCDFIJK":"CJBDAFIK","ABCDFHKL":"HFBCADLK","ABCDFHJL":"CJBDAFLH","ABCDFHJK":"HJBCAFDK","ABCDFHIL":"HFBCADLI","ABCDFHIK":"HFBCADIK","ABCDFHIJ":"HJBCAFDI","ABCDFGKL":"CGBDAFLK","ABCDFGJL":"CGBDAFLJ","ABCDFGJK":"CGBDAFJK","ABCDFGIL":"CGBDAFLI","ABCDFGIK":"CGBDAFIK","ABCDFGIJ":"CGBDAFIJ","ABCDFGHL":"CGBDAFLH","ABCDFGHK":"HGBCAFDK","ABCDFGHJ":"HGBCAFDJ","ABCDFGHI":"HGBCAFDI","ABCDEJKL":"EJBCADLK","ABCDEIKL":"EIBCADLK","ABCDEIJL":"EJBCADLI","ABCDEIJK":"EJBCADIK","ABCDEHKL":"HEBCADLK","ABCDEHJL":"HJBCADLE","ABCDEHJK":"HJBCADEK","ABCDEHIL":"HEBCADLI","ABCDEHIK":"HEBCADIK","ABCDEHIJ":"HJBCADEI","ABCDEGKL":"EGBCADLK","ABCDEGJL":"EGBCADLJ","ABCDEGJK":"EGBCADJK","ABCDEGIL":"EGBCADLI","ABCDEGIK":"EGBCADIK","ABCDEGIJ":"EGBCADIJ","ABCDEGHL":"HGBCADLE","ABCDEGHK":"HGBCADEK","ABCDEGHJ":"HGBCADEJ","ABCDEGHI":"HGBCADEI","ABCDEFKL":"CEBDAFLK","ABCDEFJL":"CJBDAFLE","ABCDEFJK":"CJBDAFEK","ABCDEFIL":"CEBDAFLI","ABCDEFIK":"CEBDAFIK","ABCDEFIJ":"CJBDAFEI","ABCDEFHL":"HFBCADLE","ABCDEFHK":"HEBCAFDK","ABCDEFHJ":"HJBCAFDE","ABCDEFHI":"HEBCAFDI","ABCDEFGL":"CGBDAFLE","ABCDEFGK":"CGBDAFEK","ABCDEFGJ":"CGBDAFEJ","ABCDEFGI":"CGBDAFEI","ABCDEFGH":"HGBCAFDE"};
+/* =================================================== K.O.-PHASE */
+const R32THIRD={79:0,85:1,81:2,74:3,82:4,77:5,87:6,80:7};
+const THIRDPH={74:"A/B/C/D/F",77:"C/D/F/G/H",79:"C/E/F/H/I",80:"E/H/I/J/K",81:"B/E/F/I/J",82:"A/E/H/I/J",85:"E/F/G/I/J",87:"D/E/I/J/L"};
+const KO=[
+ {id:73,r:"R32",A:{t:"R",g:"A"},B:{t:"R",g:"B"}},
+ {id:74,r:"R32",A:{t:"W",g:"E"},B:{t:"3i",i:3}},
+ {id:75,r:"R32",A:{t:"W",g:"F"},B:{t:"R",g:"C"}},
+ {id:76,r:"R32",A:{t:"W",g:"C"},B:{t:"R",g:"F"}},
+ {id:77,r:"R32",A:{t:"W",g:"I"},B:{t:"3i",i:5}},
+ {id:78,r:"R32",A:{t:"R",g:"E"},B:{t:"R",g:"I"}},
+ {id:79,r:"R32",A:{t:"W",g:"A"},B:{t:"3i",i:0}},
+ {id:80,r:"R32",A:{t:"W",g:"L"},B:{t:"3i",i:7}},
+ {id:81,r:"R32",A:{t:"W",g:"D"},B:{t:"3i",i:2}},
+ {id:82,r:"R32",A:{t:"W",g:"G"},B:{t:"3i",i:4}},
+ {id:83,r:"R32",A:{t:"R",g:"K"},B:{t:"R",g:"L"}},
+ {id:84,r:"R32",A:{t:"W",g:"H"},B:{t:"R",g:"J"}},
+ {id:85,r:"R32",A:{t:"W",g:"B"},B:{t:"3i",i:1}},
+ {id:86,r:"R32",A:{t:"W",g:"J"},B:{t:"R",g:"H"}},
+ {id:87,r:"R32",A:{t:"W",g:"K"},B:{t:"3i",i:6}},
+ {id:88,r:"R32",A:{t:"R",g:"D"},B:{t:"R",g:"G"}},
+ {id:89,r:"R16",A:{t:"MW",m:74},B:{t:"MW",m:77}},
+ {id:90,r:"R16",A:{t:"MW",m:73},B:{t:"MW",m:75}},
+ {id:91,r:"R16",A:{t:"MW",m:76},B:{t:"MW",m:78}},
+ {id:92,r:"R16",A:{t:"MW",m:79},B:{t:"MW",m:80}},
+ {id:93,r:"R16",A:{t:"MW",m:83},B:{t:"MW",m:84}},
+ {id:94,r:"R16",A:{t:"MW",m:81},B:{t:"MW",m:82}},
+ {id:95,r:"R16",A:{t:"MW",m:86},B:{t:"MW",m:88}},
+ {id:96,r:"R16",A:{t:"MW",m:85},B:{t:"MW",m:87}},
+ {id:97,r:"QF",A:{t:"MW",m:89},B:{t:"MW",m:90}},
+ {id:98,r:"QF",A:{t:"MW",m:93},B:{t:"MW",m:94}},
+ {id:99,r:"QF",A:{t:"MW",m:91},B:{t:"MW",m:92}},
+ {id:100,r:"QF",A:{t:"MW",m:95},B:{t:"MW",m:96}},
+ {id:101,r:"SF",A:{t:"MW",m:97},B:{t:"MW",m:98}},
+ {id:102,r:"SF",A:{t:"MW",m:99},B:{t:"MW",m:100}},
+ {id:103,r:"3P",A:{t:"ML",m:101},B:{t:"ML",m:102}},
+ {id:104,r:"F",A:{t:"MW",m:101},B:{t:"MW",m:102}}
+];
+const ROUNDNAME={R32:"Sechzehntelfinal · Round of 32",R16:"Achtelfinal",QF:"Viertelfinal",SF:"Halbfinal","3P":"Spiel um Platz 3","F":"Final"};
+const KOMAP={}; KO.forEach(m=>KOMAP[m.id]=m);
+let KR={};
+const KOKEY="wm2026_ko_v1";
+function koLoad(){try{const s=localStorage.getItem(KOKEY);if(s)KR=JSON.parse(s);}catch(e){}}
+function koSave(){try{localStorage.setItem(KOKEY,JSON.stringify(KR));}catch(e){}}
+function grpDone(g){return M.filter(m=>m.g===g).every(m=>{const r=R[m.id];return r&&r.rh!=null&&r.ra!=null;});}
+function allGroupsDone(){return GL.every(grpDone);}
+function bestThirds(){
+  if(!allGroupsDone())return null;
+  const st=currentStandings();
+  const thirds=GL.map(g=>{const k=sortGroup(GROUPS[g],st)[2];return {g:g,k:k,p:st[k].p,gd:st[k].gd,gf:st[k].gf};});
+  thirds.sort((a,b)=>b.p-a.p||b.gd-a.gd||b.gf-a.gf||(T[b.k].r-T[a.k].r));
+  const top8=thirds.slice(0,8);
+  const key=top8.map(t=>t.g).sort().join("");
+  const assign=TP3[key];
+  const third={}; GL.forEach(g=>{third[g]=sortGroup(GROUPS[g],st)[2];});
+  return {assign:assign,third:third};
+}
+function koWinner(id){const r=KR[id];if(!r||r.rh==null||r.ra==null)return null;if(r.rh>r.ra)return "A";if(r.rh<r.ra)return "B";return r.adv||null;}
+function resolveSlot(slot){
+  if(slot.t==="W"){if(!grpDone(slot.g))return null;return sortGroup(GROUPS[slot.g],currentStandings())[0];}
+  if(slot.t==="R"){if(!grpDone(slot.g))return null;return sortGroup(GROUPS[slot.g],currentStandings())[1];}
+  if(slot.t==="3i"){const bt=bestThirds();if(!bt||!bt.assign)return null;return bt.third[bt.assign[slot.i]];}
+  if(slot.t==="MW"){const w=koWinner(slot.m);if(!w)return null;return resolveSlot(KOMAP[slot.m][w]);}
+  if(slot.t==="ML"){const w=koWinner(slot.m);if(!w)return null;return resolveSlot(KOMAP[slot.m][w==="A"?"B":"A"]);}
+  return null;
+}
+function phLabel(slot,mid){
+  if(slot.t==="W")return "Sieger "+slot.g;
+  if(slot.t==="R")return "2. "+slot.g;
+  if(slot.t==="3i")return "3. ("+THIRDPH[mid]+")";
+  if(slot.t==="MW")return "Sieger M"+slot.m;
+  if(slot.t==="ML")return "Verlierer M"+slot.m;
+  return "?";
+}
+function ptsKO(th,ta,rh,ra){let p=0;const td=tend(th-ta),rd=tend(rh-ra);if(td===rd)p+=10;if(th===rh)p+=2;if(ta===ra)p+=2;if(td===rd&&(th-ta)===(rh-ra))p+=6;return p;}
+function koTip(m){let eh=0,ea=0;for(let i=0;i<=MAXG;i++)for(let j=0;j<=MAXG;j++){eh+=i*m[i][j];ea+=j*m[i][j];}let tH=Math.round(eh),tA=Math.round(ea);const d=eh-ea;if(d>=0.5&&tH<=tA)tH=tA+1;else if(-d>=0.5&&tA<=tH)tA=tH+1;return [tH,tA];}
+function refreshKoPt(card,id){const r=KR[id]||{},pl=card.querySelector(".ptline");if(r.th!=null&&r.ta!=null&&r.rh!=null&&r.ra!=null){const gp=ptsKO(r.th,r.ta,r.rh,r.ra);pl.textContent="+"+gp+" P";pl.className="ptline "+(gp>0?"":"zero");}else if(r.th!=null&&r.ta!=null){pl.textContent="Tipp ok";pl.className="ptline empty";}else{pl.textContent="";pl.className="ptline empty";}}
+function renderKO(){
+  const body=document.getElementById("koBody");const order=["R32","R16","QF","SF","3P","F"];let html="";
+  for(const rnd of order){
+    html+='<div class="ko-round">'+ROUNDNAME[rnd]+'</div>';
+    for(const m of KO){ if(m.r!==rnd)continue;
+      const ta=resolveSlot(m.A),tb=resolveSlot(m.B),r=KR[m.id]||{};
+      const sideHTML=function(slot,team){return team?teamHTML(team):'<span class="team ko-ph">'+phLabel(slot,m.id)+'</span>';};
+      let meta="";
+      if(ta&&tb){const mat=buildMatrix(ta,tb),A=analyse(mat),tot=A.pw+A.pd+A.pl,tp=koTip(mat);
+        meta='<div class="m-meta"><span class="pred">Modell <b>'+A.modal[0]+':'+A.modal[1]+'</b> · '+Math.round(100*A.pw/tot)+'/'+Math.round(100*A.pd/tot)+'/'+Math.round(100*A.pl/tot)+'%</span>'
+        +'<span class="tip">Tipp <b>'+tp[0]+':'+tp[1]+'</b><span class="copytip" data-kocopy="'+m.id+'" data-th="'+tp[0]+'" data-ta="'+tp[1]+'">▣</span></span></div>';
+      }
+      let pt="",ptcls="empty";const haveRes=(r.rh!=null&&r.ra!=null);
+      if(r.th!=null&&r.ta!=null&&haveRes){const gp=ptsKO(r.th,r.ta,r.rh,r.ra);pt="+"+gp+" P";ptcls=gp>0?"":"zero";}
+      else if(r.th!=null&&r.ta!=null){pt="Tipp ok";}
+      let adv="";
+      if(haveRes&&r.rh===r.ra&&ta&&tb){
+        adv='<div class="ko-adv"><span class="lbl">Penalty →</span>'
+          +'<button class="ko-advbtn'+(r.adv==="A"?" sel":"")+'" data-koadv="'+m.id+'" data-side="A">'+NAME[ta]+'</button>'
+          +'<button class="ko-advbtn'+(r.adv==="B"?" sel":"")+'" data-koadv="'+m.id+'" data-side="B">'+NAME[tb]+'</button></div>';
+      }
+      html+='<div class="match"><div class="m-head"><span class="m-time"><span class="ko-num">M'+m.id+'</span></span>'
+        +'<div class="m-teams">'+sideHTML(m.A,ta)+'<span class="vs">vs</span>'+sideHTML(m.B,tb)+'</div></div>'
+        +meta
+        +'<div class="m-entry"><div class="eblock tip"><span class="elbl t">Tipp</span>'
+        +'<input type="number" inputmode="numeric" data-koid="'+m.id+'" data-k="th" value="'+(r.th!=null?r.th:"")+'" placeholder="–"><span class="dash">:</span>'
+        +'<input type="number" inputmode="numeric" data-koid="'+m.id+'" data-k="ta" value="'+(r.ta!=null?r.ta:"")+'" placeholder="–"></div>'
+        +'<div class="eblock res"><span class="elbl">Resultat</span>'
+        +'<input type="number" inputmode="numeric" data-koid="'+m.id+'" data-k="rh" value="'+(r.rh!=null?r.rh:"")+'" placeholder="–"><span class="dash">:</span>'
+        +'<input type="number" inputmode="numeric" data-koid="'+m.id+'" data-k="ra" value="'+(r.ra!=null?r.ra:"")+'" placeholder="–"></div>'
+        +'<span class="ptline '+ptcls+'">'+pt+'</span></div>'+adv+'</div>';
+    }
+  }
+  body.innerHTML=html;
+  body.querySelectorAll('input[data-koid]').forEach(i=>i.addEventListener("change",onKoEntry));
+  body.querySelectorAll('[data-koadv]').forEach(b=>b.addEventListener("click",onKoAdv));
+  body.querySelectorAll('[data-kocopy]').forEach(b=>b.addEventListener("click",onKoCopy));
+}
+function onKoEntry(e){const id=+e.target.dataset.koid,k=e.target.dataset.k,v=num(e.target.value);KR[id]=KR[id]||{};if(v==null)delete KR[id][k];else KR[id][k]=v;if(Object.keys(KR[id]).length===0)delete KR[id];koSave();renderKO();updateScoreboard();}
+function onKoAdv(e){const id=+e.target.dataset.koadv;KR[id]=KR[id]||{};KR[id].adv=e.target.dataset.side;koSave();renderKO();updateScoreboard();}
+function onKoCopy(e){const id=+e.target.dataset.kocopy;KR[id]=KR[id]||{};KR[id].th=+e.target.dataset.th;KR[id].ta=+e.target.dataset.ta;koSave();renderKO();updateScoreboard();}
+
+(async function init(){
+  prepareMatches();        // Matrizen + Prognosen einmalig
+  buildSelects();
+  renderSchedule();        // sofortige Anzeige
+  koLoad();
+  try{await loadResults();}catch(e){}
+  renderSchedule();        // gespeicherte Tipps/Resultate übernehmen
+  deferSim(10000);         // erste Chancen im Hintergrund (Button rechnet 50'000)
+})();
+</script>
+</body>
+</html>
