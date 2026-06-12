@@ -1,0 +1,36 @@
+name: Elo-Update
+
+on:
+  schedule:
+    - cron: "30 6 * * *"   # täglich 06:30 UTC (08:30 CEST) — nach de Nacht-Spiel in Nordamerika
+  workflow_dispatch:        # manuell uslösbar im Actions-Tab
+
+permissions:
+  contents: write
+
+concurrency:
+  group: elo-update   # cron und manuelle Läuf nöd parallel laufe lah
+
+jobs:
+  update-elo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Live-Elo hole und elo.json schriibe
+        run: node update-elo.mjs
+      - name: Commit & Push (nur wenn sich öppis ändert hät)
+        run: |
+          if git diff --quiet elo.json; then
+            echo "Kei Änderig — kei Commit"
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add elo.json
+            git commit -m "chore: Elo-Update $(date -u +%d.%m.%Y)"
+            git pull --rebase origin main
+            git push
+          fi

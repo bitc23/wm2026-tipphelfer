@@ -226,7 +226,7 @@
 
   <!-- STANDINGS -->
   <section id="view-standings" class="hidden">
-    <div class="note">D <span style="color:var(--lime)">% Achtelfinal</span> chunnt us bis zu <b id="simN">50'000</b> simulierte Turnier-Verläuf: iigetrageni Resultat sind fix, de Räscht wird mit em Modell gwürflet. Top 2 jeder Gruppe + die 8 beschte Dritte chömed witer.</div>
+    <div class="note">D <span style="color:var(--lime)">% Achtelfinal</span> chunnt us bis zu <b id="simN">50'000</b> simulierte Turnier-Verläuf: iigetrageni Resultat sind fix, de Räscht wird mit em Modell gwürflet. Top 2 jeder Gruppe + die 8 beschte Dritte chömed witer.<span id="eloStand"></span></div>
     <div class="legend"><i style="background:var(--lime)"></i>Platz 1–2 (direkt) — % Achtelfinal inkl. Dritte-Chance</div>
     <div id="standingsBody"></div>
   </section>
@@ -375,7 +375,7 @@ const SWISSREL=new Set(["Switzerland"]);
 
 /* =================================================== MODEL (Poisson × Dixon-Coles) */
 function pois(l,k){let p=Math.exp(-l);for(let i=1;i<=k;i++)p*=l/i;return p;}
-const ELO={Mexico:1975,SouthAfrica:1661,SouthKorea:1879,Czechia:1800,Canada:1894,Switzerland:1954,Qatar:1565,Bosnia:1650,Brazil:2067,Morocco:1984,Haiti:1696,Scotland:1842,USA:1824,Australia:1899,Paraguay:1917,Turkiye:1967,Germany:2002,Curacao:1601,IvoryCoast:1814,Ecuador:2025,Netherlands:2009,Japan:1992,Sweden:1769,Tunisia:1737,Belgium:1955,Egypt:1809,Iran:1896,NewZealand:1720,Spain:2217,CapeVerde:1652,SaudiArabia:1685,Uruguay:1973,France:2123,Senegal:1918,Iraq:1749,Norway:1969,Argentina:2187,Algeria:1872,Austria:1888,Jordan:1774,Portugal:2040,DRCongo:1772,Uzbekistan:1819,Colombia:2062,England:2084,Croatia:1968,Ghana:1624,Panama:1847};
+const ELO={Mexico:1881,SouthAfrica:1511,SouthKorea:1758,Czechia:1740,Canada:1788,Switzerland:1891,Qatar:1421,Bosnia:1595,Brazil:1991,Morocco:1827,Haiti:1548,Scotland:1782,USA:1726,Australia:1777,Paraguay:1834,Turkiye:1911,Germany:1932,Curacao:1434,IvoryCoast:1695,Ecuador:1938,Netherlands:1948,Japan:1906,Sweden:1712,Tunisia:1628,Belgium:1894,Egypt:1696,Iran:1772,NewZealand:1562,Spain:2157,CapeVerde:1578,SaudiArabia:1576,Uruguay:1892,France:2063,Senegal:1860,Iraq:1607,Norway:1914,Argentina:2115,Algeria:1772,Austria:1830,Jordan:1680,Portugal:1989,DRCongo:1652,Uzbekistan:1714,Colombia:1982,England:2024,Croatia:1912,Ghana:1510,Panama:1730};  // eloratings.net, Stand 12.06.2026
 Object.keys(ELO).forEach(k=>{if(T[k])T[k].r=ELO[k];});  // datebasierti Elo ersetzt Hand-Ratings
 function ratingOf(k){return T[k].r;}
 const MU=1.258, GAMMA=0.00209;  // datebasiert gefittet aus 5847 moderne neutrale Länderspiele
@@ -597,6 +597,7 @@ function renderStandings(){
         <td>${s.gd>0?'+':''}${s.gd}</td><td>${s.gf}:${s.ga}</td><td class="adv"><span class="pct">${pc!=null?pc+'%':'–'}</span></td></tr>`;});
     html+=`</tbody></table></div>`;}
   body.innerHTML=html;
+  renderEloStand();
 }
 
 /* =================================================== WIRING */
@@ -609,9 +610,33 @@ function switchView(v){
 }
 function deferSim(n){setTimeout(()=>{try{ADV=simulate(n);}catch(e){ADV={};}
   if(!document.getElementById("view-standings").classList.contains("hidden"))renderStandings();},60);}
+let eloStand=null;      // Datum vom zletscht glade Live-Elo (null = iibauti Wert aktiv)
+let userRecalced=false; // dass de init-Pfad kei 50'000er-Rechnig vom Benutzer überschriibt
+async function fetchLiveElo(){
+  // Holt elo.json (wird täglich vomene GitHub-Action us eloratings.net aktualisiert).
+  // Bi Fähler (offline, file://, kaputts JSON, Timeout) blibed eifach d iibaute ELO-Wert aktiv.
+  try{
+    const res=await fetch("elo.json",{cache:"no-store",signal:AbortSignal.timeout(5000)});
+    if(!res.ok)return false;
+    const data=await res.json();
+    if(!data||typeof data.ratings!=="object")return false;
+    const keys=Object.keys(T);
+    if(!keys.every(k=>Number.isInteger(data.ratings[k])&&data.ratings[k]>=1200&&data.ratings[k]<=2400))return false;
+    keys.forEach(k=>T[k].r=data.ratings[k]);
+    eloStand=typeof data.updated==="string"&&/^\d{4}-\d{2}-\d{2}$/.test(data.updated)?data.updated:null;
+    prepareMatches();  // Matrize, Prognose & CDFs mit de neue Wertige neu baue
+    return true;
+  }catch(e){return false;}
+}
+function renderEloStand(){
+  const el=document.getElementById("eloStand"); if(!el)return;
+  el.textContent=eloStand?` Elo-Stand: ${eloStand.split("-").reverse().join(".")} (eloratings.net).`:"";
+}
 async function recalc(){
   const b=document.getElementById("recalcBtn");b.innerHTML='<span class="spin"></span>rechne 50\u2019000…';b.disabled=true;
   await new Promise(r=>setTimeout(r,50));
+  userRecalced=true;
+  if(await fetchLiveElo())renderSchedule();  // frischs Elo -> au Modell-Tipps im Spielplan aktualisiere
   try{ADV=simulate(50000);}catch(e){ADV={};}
   await saveResults(); renderStandings(); switchView("standings");
   b.innerHTML='↻ Wahrschiinlichkeite neu berächne';b.disabled=false;
@@ -821,7 +846,12 @@ function onKoCopy(e){const id=+e.target.dataset.kocopy;KR[id]=KR[id]||{};KR[id].
   koLoad();
   try{await loadResults();}catch(e){}
   renderSchedule();        // gespeicherte Tipps/Resultate übernehmen
-  deferSim(10000);         // erste Chancen im Hintergrund (Button rechnet 50'000)
+  fetchLiveElo().then(ok=>{ // Live-Elo lade (Fallback: iibauti Wert), denn erst simuliere
+    if(userRecalced)return; // de Benutzer hät inzwüsche scho selber frisch grechnet
+    const ae=document.activeElement;
+    if(ok&&!(ae&&ae.dataset&&ae.dataset.id))renderSchedule(); // nöd während em Tippe drirendere
+    deferSim(10000);       // erste Chancen im Hintergrund (Button rechnet 50'000)
+  });
 })();
 </script>
 </body>
