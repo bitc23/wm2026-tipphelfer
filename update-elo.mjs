@@ -38,18 +38,28 @@ const TEAMS = {
   Ghana: ["GH", "Ghana"],          Panama: ["PA", "Panama"]
 };
 
-async function fetchTSV(url) {
-  // explizite Browser-ähnlichi Header: de Server git em Node-Default-Fingerprint
-  // ab Datacenter-IPs (GitHub-Runner) en HTTP 415 zrugg
-  const res = await fetch(url, {
-    signal: AbortSignal.timeout(30000),
-    headers: {
-      "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) wm2026-tipphelfer-elo-update (+https://github.com/bitc23/wm2026-tipphelfer)",
-      "Accept": "text/tab-separated-values, text/plain;q=0.9, */*;q=0.8"
-    }
+// eloratings.net blockt Datacenter-IPs (GitHub-Runner: HTTP 415 für jede Request, egal weli Header).
+// Drum: zerst direkt probiere (klappt ab normale IPs), denn über de Jina-Reader-Proxy.
+const PROXY_PREFIX = "https://r.jina.ai/";
+
+async function fetchText(url) {
+  try {
+    const res = await fetch(url, { signal: AbortSignal.timeout(30000) });
+    if (res.ok) return await res.text();
+    console.warn(`${url}: HTTP ${res.status} — wechsle uf Proxy`);
+  } catch (e) {
+    console.warn(`${url}: ${e.message} — wechsle uf Proxy`);
+  }
+  const res = await fetch(PROXY_PREFIX + url, {
+    signal: AbortSignal.timeout(60000),
+    headers: { "X-Return-Format": "text", "X-No-Cache": "true" }
   });
-  if (!res.ok) throw new Error(`${url}: HTTP ${res.status}`);
-  const text = await res.text();
+  if (!res.ok) throw new Error(`Proxy ${PROXY_PREFIX}${url}: HTTP ${res.status}`);
+  return await res.text();
+}
+
+async function fetchTSV(url) {
+  const text = await fetchText(url);
   return text.split(/\r?\n/).filter(line => line.trim()).map(line => line.split("\t"));
 }
 
