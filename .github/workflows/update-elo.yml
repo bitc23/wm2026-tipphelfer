@@ -22,6 +22,15 @@ jobs:
           node-version: 22
       - name: Live-Elo hole und elo.json schriibe
         run: node update-elo.mjs
+      - name: Debug bi Fähler (Header-Matrix vom Runner us)
+        if: failure()
+        run: |
+          for ua in "node" "Mozilla/5.0 (X11; Linux x86_64)" "curl/8.5.0"; do
+            for f in World.tsv en.teams.tsv; do
+              code=$(curl -s -o /dev/null -w "%{http_code}" -A "$ua" "https://www.eloratings.net/$f")
+              echo "UA='$ua' $f -> HTTP $code"
+            done
+          done
       - name: Commit & Push (nur wenn sich öppis ändert hät)
         run: |
           if git diff --quiet elo.json; then

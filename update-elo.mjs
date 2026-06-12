@@ -39,7 +39,15 @@ const TEAMS = {
 };
 
 async function fetchTSV(url) {
-  const res = await fetch(url, { signal: AbortSignal.timeout(30000) });
+  // explizite Browser-ähnlichi Header: de Server git em Node-Default-Fingerprint
+  // ab Datacenter-IPs (GitHub-Runner) en HTTP 415 zrugg
+  const res = await fetch(url, {
+    signal: AbortSignal.timeout(30000),
+    headers: {
+      "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) wm2026-tipphelfer-elo-update (+https://github.com/bitc23/wm2026-tipphelfer)",
+      "Accept": "text/tab-separated-values, text/plain;q=0.9, */*;q=0.8"
+    }
+  });
   if (!res.ok) throw new Error(`${url}: HTTP ${res.status}`);
   const text = await res.text();
   return text.split(/\r?\n/).filter(line => line.trim()).map(line => line.split("\t"));
