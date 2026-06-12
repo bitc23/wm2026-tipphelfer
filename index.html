@@ -220,7 +220,7 @@
       <select id="grpFilterT"><option value="all">Alli Gruppe</option></select>
       <select id="sortT"><option value="group">Sortiere: nach Gruppe</option><option value="rating">Sortiere: nach Stärke</option></select>
     </div>
-    <div class="note">Stärke-Wert (<b>R</b>) = mini Elo-ähnlichi Iischätzig (Form, Kader, Ranking, Verletzige) — si triebt s Modell. «WM zuletzt» = WM 2022; «EM zuletzt» = EM 2024 (UEFA-Teams).</div>
+    <div class="note">Stärke-Wert (<b>R</b>) = offizielli <b>World Football Elo Ratings</b> (eloratings.net), täglich automatisch aktualisiert — si triebt s Modell. Achtung: das isch <b>nöd</b> s FIFA-Ranking — Elo zellt Goal-Differänz &amp; Heimvorteil mit und reagiert schneller. «WM zuletzt» = WM 2022; «EM zuletzt» = EM 2024 (UEFA-Teams).</div>
     <div id="teamsBody"></div>
   </section>
 
@@ -241,7 +241,7 @@
   <section id="view-modell" class="hidden">
     <div class="note">So rächnet de Tipphelfer — i 5 Schritt zum nachevollzieh. <b>Alli Zahle sind us echte Spiel abgleitet</b>, nüt isch willkürlich gsetzt.</div>
     <div class="mblock"><h3>1 · Team-Stärki (Elo)</h3>
-      <p>Jedes Team het e Stärki-Zahl, berächnet us <b>~49'000 echte Länderspiel (1872–8.6.2026)</b>: gwinnt es gäge en starke Gegner, stiigt d Zahl, susch fallt si — proportional zu de Goal-Differänz. Aktuelli Spanne: <b>Spanie 2217</b> bis <b>Katar 1565</b>. <span class="muted2">(Elo cha Teams us schwächere Konföderatione liecht überschätze.)</span></p></div>
+      <p>Jedes Team het e Stärki-Zahl us de <b>World Football Elo Ratings</b> (eloratings.net), berächnet us <b>~49'000 echte Länderspiel sit 1872</b> und täglich automatisch aktualisiert: gwinnt es gäge en starke Gegner, stiigt d Zahl, susch fallt si — proportional zu de Goal-Differänz. D aktuelle Wert vo allne 48 Teams gsehsch im Teams-Tab. <span class="muted2">(Elo cha Teams us schwächere Konföderatione liecht überschätze — und es isch nöd s FIFA-Ranking.)</span></p></div>
     <div class="mblock"><h3>2 · Vom Stärke-Abstand zu de erwartete Goals</h3>
       <p>De Abstand Δ zwüsche de zwöi Elo-Wert bestimmt d erwartete Goals. Us 5'847 moderni neutrali Spiel chunnt e eifachi Gsetzmässigkeit:</p>
       <p class="eq">λ<sub>stärkers</sub> = 1.26 · e<sup>(0.00209·Δ)</sup>&nbsp;&nbsp;&nbsp;λ<sub>schwächers</sub> = 1.26 · e<sup>(−0.00209·Δ)</sup></p>
