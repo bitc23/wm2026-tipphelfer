@@ -95,6 +95,9 @@
   .ptline{font-family:var(--mono); font-size:11px; padding:2px 7px; border-radius:6px; background:rgba(198,255,58,.13); color:var(--lime); min-height:18px}
   .ptline.zero{background:rgba(232,115,107,.13); color:var(--loss)}
   .ptline.empty{background:transparent; color:var(--muted2)}
+  .resval{font-family:var(--mono); font-weight:700; font-size:16px; color:var(--ink); min-width:48px; text-align:center; display:inline-block}
+  .resval.pending{font-weight:400; font-size:11px; color:var(--muted2)}
+  .ko-advwin{color:var(--lime); font-weight:600}
 
   @media(max-width:560px){
     .match{grid-template-columns:54px 1fr}
@@ -199,10 +202,11 @@
   <section id="view-schedule">
     <div class="scoreboard">
       <div class="col"><span class="lbl">Dini Pünkt total</span><span class="big" id="sbTotal">0</span></div>
-      <div class="col"><span class="lbl">Spiel gewertet</span><span class="v" id="sbCount">0 / 72</span></div>
+      <div class="col"><span class="lbl">Spiel gewertet</span><span class="v" id="sbCount">0 / 104</span></div>
       <div class="col"><span class="lbl">Ø pro Spiel</span><span class="v" id="sbAvg">–</span></div>
       <button class="reset" id="resetBtn">alli Iiträg lösche</button>
     </div>
+    <div class="note lime" id="resNote">D <b>Resultat</b> aktualisiere sich automatisch jede Morge (Quelle: football-data.org) — du muesch nu dini eigete <b>Tipps</b> iitrage.</div>
     <div class="toolbar">
       <select id="grpFilter"><option value="all">Alli Gruppe</option></select>
       <label class="chk"><input type="checkbox" id="swissOnly"> nur 🇨🇭</label>
@@ -233,7 +237,7 @@
 
   <!-- KO -->
   <section id="view-ko" class="hidden">
-    <div class="note lime"><b>K.o.-Phase:</b> D Paarige fülled sich automatisch us de Tabelle — Gruppe-Sieger &amp; Zwöiti sobald e Gruppe fertig gspilt isch, die 8 beschte Dritte sobald <b>alli</b> Gruppe durch sind (exakt nach FIFA Annex C, 495 Kombinatione). Tipp &amp; Resultat = Stand nach 120 Min (ohni Penaltyschiesse). Bi Unentschiede wähl, wer per Penalty wiiterchunnt, demit s Bracket witerlauft. Punkt: richtige Sieger/Tendenz <b>10</b> · jedi exakti Goal-Zahl <b>+2</b> · richtigi Goal-Differänz <b>+6</b> (exakt = 20).</div>
+    <div class="note lime"><b>K.o.-Phase:</b> D Paarige fülled sich automatisch us de Tabelle — Gruppe-Sieger &amp; Zwöiti sobald e Gruppe fertig gspilt isch, die 8 beschte Dritte sobald <b>alli</b> Gruppe durch sind (exakt nach FIFA Annex C, 495 Kombinatione). Tipp = Stand nach 120 Min (ohni Penaltyschiesse). S <b>Resultat</b> und (bi Unentschiede) wer per Penalty wiiterchunnt, fülled sich automatisch us de offizielle Spiel — s Bracket lauft vo sälber witer. Punkt: richtige Sieger/Tendenz <b>10</b> · jedi exakti Goal-Zahl <b>+2</b> · richtigi Goal-Differänz <b>+6</b> (exakt = 20).</div>
     <div id="koBody"></div>
   </section>
 
@@ -444,6 +448,46 @@ async function saveResults(){
   try{ if(window.storage)await window.storage.set(SKEY,s); else localStorage.setItem(SKEY,s); }catch(e){ try{localStorage.setItem(SKEY,s);}catch(_){} }
 }
 
+/* ===== Offizielli Resultat (results.json, täglich vomene GitHub-Action aktualisiert) =====
+   D Tester müend so kei Resultat meh vo Hand iitrage — die werded automatisch gfüllt,
+   si tippe nu no sälber. Schlüssel = sortierts Team-Paar + grp/ko (gliich wie update-results.mjs). */
+let OFFICIAL=null, resStand=null;
+function pairKey(a,b,ko){return [a,b].sort().join("|")+"|"+(ko?"ko":"grp");}
+function validRes(o){return o&&Number.isInteger(o.hs)&&Number.isInteger(o.as);}
+function applyOfficial(){
+  if(!OFFICIAL)return;
+  for(const m of M){
+    const o=OFFICIAL[pairKey(m.h,m.a,false)]; if(!validRes(o))continue;
+    R[m.id]=R[m.id]||{}; const hh=o.home===m.h;
+    R[m.id].rh=hh?o.hs:o.as; R[m.id].ra=hh?o.as:o.hs;
+  }
+  for(const m of KO){
+    const ta=resolveSlot(m.A),tb=resolveSlot(m.B); if(!ta||!tb)continue;
+    const o=OFFICIAL[pairKey(ta,tb,true)]; if(!validRes(o))continue;
+    KR[m.id]=KR[m.id]||{}; const ha=o.home===ta;
+    KR[m.id].rh=ha?o.hs:o.as; KR[m.id].ra=ha?o.as:o.hs;
+    if(o.pens){const away=o.home===ta?tb:ta, winner=o.pens==="home"?o.home:away; KR[m.id].adv=winner===ta?"A":"B";}
+  }
+  saveResults(); koSave();
+}
+async function fetchLiveResults(){
+  try{
+    const res=await fetch("results.json",{cache:"no-store",signal:AbortSignal.timeout(5000)});
+    if(!res.ok)return false;
+    const data=await res.json();
+    if(!data||typeof data.results!=="object")return false;
+    OFFICIAL=data.results;
+    resStand=typeof data.updated==="string"&&/^\d{4}-\d{2}-\d{2}$/.test(data.updated)?data.updated:null;
+    applyOfficial();
+    return true;
+  }catch(e){return false;}
+}
+function renderResStand(){
+  const el=document.getElementById("resNote"); if(!el)return;
+  el.innerHTML='D <b>Resultat</b> aktualisiere sich automatisch jede Morge (Quelle: football-data.org'
+    +(resStand?', Stand '+resStand.split("-").reverse().join("."):'')+') — du muesch nu dini eigete <b>Tipps</b> iitrage.';
+}
+
 /* =================================================== SCHEDULE */
 const DOW=["So","Mo","Di","Mi","Do","Fr","Sa"];
 function D(iso){return new Date(iso+":00+02:00");}
@@ -498,10 +542,7 @@ function renderSchedule(){
           <input type="number" inputmode="numeric" data-id="${m.id}" data-k="th" value="${r.th!=null?r.th:''}" placeholder="–">
           <span class="dash">:</span>
           <input type="number" inputmode="numeric" data-id="${m.id}" data-k="ta" value="${r.ta!=null?r.ta:''}" placeholder="–"></div>
-        <div class="entry-row res"><span class="elbl">Resultat</span>
-          <input type="number" inputmode="numeric" data-id="${m.id}" data-k="rh" value="${r.rh!=null?r.rh:''}" placeholder="–">
-          <span class="dash">:</span>
-          <input type="number" inputmode="numeric" data-id="${m.id}" data-k="ra" value="${r.ra!=null?r.ra:''}" placeholder="–"></div>
+        <div class="entry-row res"><span class="elbl">Resultat</span>${r.rh!=null&&r.ra!=null?`<span class="resval">${r.rh}:${r.ra}</span>`:`<span class="resval pending">folgt</span>`}</div>
         <div class="ptline ${ptcls}">${pt}</div>
       </div>
     </div>`;
@@ -672,7 +713,7 @@ document.addEventListener("click",function(e){var el=e.target.closest?e.target.c
 ["grpFilterT","sortT"].forEach(id=>document.getElementById(id).addEventListener("change",renderTeams));
 document.getElementById("recalcBtn").addEventListener("click",recalc);
 document.getElementById("resetBtn").addEventListener("click",async()=>{
-  if(confirm("Alli iigetragene Tipps und Resultat lösche?")){R={};KR={};await saveResults();koSave();renderSchedule();renderKO();ADV={};deferSim(10000);}
+  if(confirm("Alli iigetragene Tipps lösche? (Offizielli Resultat blibed.)")){R={};KR={};applyOfficial();await saveResults();koSave();renderSchedule();renderKO();ADV={};deferSim(10000);}
 });
 
 /* ===== Tipps exportiere / importiere (localStorage <-> JSON-Datei) ===== */
@@ -713,6 +754,7 @@ document.getElementById("importFile").addEventListener("change",async e=>{
     keys.forEach(k=>localStorage.setItem(k,data[k]));
     R={};KR={};
     await loadResults();koLoad();
+    applyOfficial();
     renderSchedule();renderKO();updateScoreboard();
     ADV={};deferSim(10000);
     alert("Tipps erfolgriich importiert!");
@@ -814,9 +856,9 @@ function renderKO(){
       else if(r.th!=null&&r.ta!=null){pt="Tipp ok";}
       let adv="";
       if(haveRes&&r.rh===r.ra&&ta&&tb){
+        const advName=r.adv==="A"?NAME[ta]:r.adv==="B"?NAME[tb]:null;
         adv='<div class="ko-adv"><span class="lbl">Penalty →</span>'
-          +'<button class="ko-advbtn'+(r.adv==="A"?" sel":"")+'" data-koadv="'+m.id+'" data-side="A">'+NAME[ta]+'</button>'
-          +'<button class="ko-advbtn'+(r.adv==="B"?" sel":"")+'" data-koadv="'+m.id+'" data-side="B">'+NAME[tb]+'</button></div>';
+          +(advName?'<span class="ko-advwin">'+advName+' witer</span>':'<span class="muted2">no offe</span>')+'</div>';
       }
       html+='<div class="match"><div class="m-head"><span class="m-time"><span class="ko-num">M'+m.id+'</span></span>'
         +'<div class="m-teams">'+sideHTML(m.A,ta)+'<span class="vs">vs</span>'+sideHTML(m.B,tb)+'</div></div>'
@@ -825,8 +867,7 @@ function renderKO(){
         +'<input type="number" inputmode="numeric" data-koid="'+m.id+'" data-k="th" value="'+(r.th!=null?r.th:"")+'" placeholder="–"><span class="dash">:</span>'
         +'<input type="number" inputmode="numeric" data-koid="'+m.id+'" data-k="ta" value="'+(r.ta!=null?r.ta:"")+'" placeholder="–"></div>'
         +'<div class="eblock res"><span class="elbl">Resultat</span>'
-        +'<input type="number" inputmode="numeric" data-koid="'+m.id+'" data-k="rh" value="'+(r.rh!=null?r.rh:"")+'" placeholder="–"><span class="dash">:</span>'
-        +'<input type="number" inputmode="numeric" data-koid="'+m.id+'" data-k="ra" value="'+(r.ra!=null?r.ra:"")+'" placeholder="–"></div>'
+        +(haveRes?'<span class="resval">'+r.rh+':'+r.ra+'</span>':'<span class="resval pending">folgt</span>')+'</div>'
         +'<span class="ptline '+ptcls+'">'+pt+'</span></div>'+adv+'</div>';
     }
   }
@@ -845,7 +886,12 @@ function onKoCopy(e){const id=+e.target.dataset.kocopy;KR[id]=KR[id]||{};KR[id].
   renderSchedule();        // sofortige Anzeige
   koLoad();
   try{await loadResults();}catch(e){}
-  renderSchedule();        // gespeicherte Tipps/Resultate übernehmen
+  renderSchedule();        // gespeicherte Tipps übernehmen
+  fetchLiveResults().then(ok=>{ // offizielli Resultat lade (Fallback: nüt -> blibt eifach läär)
+    if(!ok)return;
+    renderResStand(); renderSchedule(); renderKO();
+    if(!userRecalced)deferSim(10000); // Chancene mit de neue fixe Resultat nochrächne
+  });
   fetchLiveElo().then(ok=>{ // Live-Elo lade (Fallback: iibauti Wert), denn erst simuliere
     if(userRecalced)return; // de Benutzer hät inzwüsche scho selber frisch grechnet
     const ae=document.activeElement;
