@@ -41,6 +41,8 @@
   .scoreboard .lbl{font-family:var(--mono); font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted2)}
   .scoreboard .col{display:flex; flex-direction:column; gap:2px}
   .scoreboard .col .v{font-family:var(--mono); font-weight:700; font-size:15px; color:var(--ink)}
+  .scoreboard .modelcol{padding-left:14px; border-left:1px dashed var(--line)}
+  .scoreboard .modelcol .v{color:var(--muted)}
   .scoreboard .reset{margin-left:auto; font-size:11.5px; color:var(--muted); border:1px solid var(--line); background:var(--card);
     border-radius:8px; padding:6px 10px; cursor:pointer} .scoreboard .reset:hover{border-color:var(--loss); color:var(--loss)}
   .toolbar .tbtn{font-size:11.5px; color:var(--muted); border:1px solid var(--line); background:var(--card);
@@ -200,6 +202,8 @@
       <div class="col"><span class="lbl">Dini Pünkt total</span><span class="big" id="sbTotal">0</span></div>
       <div class="col"><span class="lbl">Spiel gewertet</span><span class="v" id="sbCount">0 / 104</span></div>
       <div class="col"><span class="lbl">Ø pro Spiel</span><span class="v" id="sbAvg">–</span></div>
+      <div class="col modelcol"><span class="lbl">Modell-Pünkt total</span><span class="v" id="sbModelTotal">–</span></div>
+      <div class="col modelcol"><span class="lbl">Modell Ø/Spiel</span><span class="v" id="sbModelAvg">–</span></div>
       <button class="reset" id="resetBtn">alli Iiträg lösche</button>
     </div>
     <div class="note lime" id="resNote">D <b>Resultat</b> aktualisiere sich automatisch jede Morge (Quelle: football-data.org) — du muesch nu dini eigete <b>Tipps</b> iitrage.</div>
@@ -494,12 +498,22 @@ function teamHTML(k){return `<span class="team" data-team="${k}"><span class="fl
 function num(v){return v===""||v==null?null:Math.max(0,Math.min(30,parseInt(v,10)));}
 
 function updateScoreboard(){
-  let total=0,cnt=0;
-  for(const m of M){const r=R[m.id]; if(r&&r.th!=null&&r.ta!=null&&r.rh!=null&&r.ra!=null){total+=ptsFor(r.th,r.ta,r.rh,r.ra);cnt++;}}
-  for(const m of KO){const r=KR[m.id]; if(r&&r.th!=null&&r.ta!=null&&r.rh!=null&&r.ra!=null){total+=ptsKO(r.th,r.ta,r.rh,r.ra);cnt++;}}
+  let total=0,cnt=0;          // Benutzer: nu Spiel wo er tippt UND es Resultat het
+  let mTotal=0,mCnt=0;        // Modell: theoretisch über ALLI gspilte Spiel (Modell-Tipp vs Resultat)
+  for(const m of M){const r=R[m.id]; if(!r||r.rh==null||r.ra==null)continue;
+    if(r.th!=null&&r.ta!=null){total+=ptsFor(r.th,r.ta,r.rh,r.ra);cnt++;}
+    if(m.an&&m.an.tip){mTotal+=ptsFor(m.an.tip[0],m.an.tip[1],r.rh,r.ra);mCnt++;}
+  }
+  for(const m of KO){const r=KR[m.id]; if(!r||r.rh==null||r.ra==null)continue;
+    if(r.th!=null&&r.ta!=null){total+=ptsKO(r.th,r.ta,r.rh,r.ra);cnt++;}
+    const ta=teamInMatch(m.id,"A"),tb=teamInMatch(m.id,"B");
+    if(ta&&tb){const tp=koTip(buildMatrix(ta,tb));mTotal+=ptsKO(tp[0],tp[1],r.rh,r.ra);mCnt++;}
+  }
   document.getElementById("sbTotal").textContent=total;
   document.getElementById("sbCount").textContent=cnt+" / 104";
   document.getElementById("sbAvg").textContent=cnt?(total/cnt).toFixed(2):"–";
+  document.getElementById("sbModelTotal").textContent=mCnt?mTotal:"–";
+  document.getElementById("sbModelAvg").textContent=mCnt?(mTotal/mCnt).toFixed(2):"–";
 }
 function renderSchedule(){
   const body=document.getElementById("scheduleBody");
