@@ -1,6 +1,8 @@
 name: Resultat-Update
 
 on:
+  push:
+    branches: [claude/auto-daily-results-updates-awx3la]   # TEMPORÄR: zum Teste uf dem Branch
   schedule:
     - cron: "0 7 * * *"    # täglich 07:00 UTC (09:00 CEST) — nach de Nacht-Spiel in Nordamerika
   workflow_dispatch:        # manuell uslösbar im Actions-Tab
