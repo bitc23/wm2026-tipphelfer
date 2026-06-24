@@ -129,7 +129,9 @@
   table.st td{padding:6px 4px; text-align:center; border-top:1px solid var(--line); font-family:var(--mono)}
   table.st td.l{font-family:var(--body); font-weight:600}
   .qual{box-shadow:inset 3px 0 0 var(--lime)}
-  .adv .pct{color:var(--lime)} .legend{font-size:11px; color:var(--muted); margin:2px 12px 8px}
+  .adv .pct{color:var(--lime)} .adv .pct.elim{color:var(--loss)}
+  tr.elimrow{opacity:.5} tr.elimrow td{text-decoration:line-through; text-decoration-color:var(--muted2)} tr.elimrow .pct{text-decoration:none}
+  .legend{font-size:11px; color:var(--muted); margin:2px 12px 8px}
   .legend i{display:inline-block; width:9px; height:9px; border-radius:2px; vertical-align:middle; margin:0 3px 0 9px}
 
   .foot{margin-top:24px; padding-top:14px; border-top:1px solid var(--line); font-size:11.5px; color:var(--muted2)}
@@ -618,6 +620,57 @@ function currentStandings(){
   Object.keys(st).forEach(k=>st[k].gd=st[k].gf-st[k].ga); return st;
 }
 function sortGroup(keys,st){return keys.slice().sort((a,b)=>st[b].p-st[a].p||st[b].gd-st[a].gd||st[b].gf-st[a].gf||(T[b].r-T[a].r));}
+/* ===== Exakti mathematischi Elimination =====
+   E Team chunnt uf 0%, wenn s under KEINER Kombination vo de no offene Resultat
+   no cha wiiterchoo — weder als Top-2 no als eine vo de 8 beschte Gruppe-Dritte.
+   Wird nu grächnet, wenn jedi Gruppe <=2 Spiel offe het (susch isch eh niemer use
+   und d Enumeration bliibt billig). Margine >9 sind fürs Feasibility irrelevant. */
+const ELIMG=9;
+function betterRec(a,b){return a.p>b.p||(a.p===b.p&&(a.gd>b.gd||(a.gd===b.gd&&a.gf>b.gf)));}
+function computeEliminated(){
+  const elim=new Set();
+  const rem={}; GL.forEach(g=>rem[g]=[]);
+  const base={}; Object.keys(T).forEach(k=>base[k]={p:0,gf:0,ga:0});
+  for(const m of M){const r=R[m.id];
+    if(r&&r.rh!=null&&r.ra!=null){
+      base[m.h].p+=r.rh>r.ra?3:r.rh===r.ra?1:0; base[m.a].p+=r.ra>r.rh?3:r.rh===r.ra?1:0;
+      base[m.h].gf+=r.rh;base[m.h].ga+=r.ra;base[m.a].gf+=r.ra;base[m.a].ga+=r.rh;
+    } else rem[m.g].push([m.h,m.a]);
+  }
+  if(GL.some(g=>rem[g].length>2))return elim; // z früeh: niemer mathematisch use
+  const top2={}, best3={}, thirds={};
+  for(const g of GL){
+    const teams=GROUPS[g], rm=rem[g]; thirds[g]=[]; teams.forEach(k=>{top2[k]=false;best3[k]=null;});
+    const recur=(i,extra)=>{
+      if(i===rm.length){
+        const recs={}; teams.forEach(k=>{const b=base[k];let p=b.p,gf=b.gf,ga=b.ga;
+          for(const[h,a,hg,ag]of extra){if(h===k){p+=hg>ag?3:hg===ag?1:0;gf+=hg;ga+=ag;}else if(a===k){p+=ag>hg?3:hg===ag?1:0;gf+=ag;ga+=hg;}}
+          recs[k]={p:p,gd:gf-ga,gf:gf};});
+        const ord=teams.slice().sort((x,y)=>betterRec(recs[x],recs[y])?-1:betterRec(recs[y],recs[x])?1:0);
+        thirds[g].push(recs[ord[2]]);
+        for(const k of teams){const rk=recs[k]; let sb=0,sw=0;
+          for(const o of teams){if(o===k)continue; if(betterRec(recs[o],rk))sb++; else if(betterRec(rk,recs[o]))sw++;}
+          if(sb<=1)top2[k]=true;
+          if(sb<=2&&sw>=1&&(!best3[k]||betterRec(rk,best3[k])))best3[k]=rk;
+        }
+        return;
+      }
+      const[h,a]=rm[i];
+      for(let hg=0;hg<=ELIMG;hg++)for(let ag=0;ag<=ELIMG;ag++)recur(i+1,extra.concat([[h,a,hg,ag]]));
+    };
+    recur(0,[]);
+  }
+  for(const X of Object.keys(T)){
+    if(top2[X])continue;
+    const b3=best3[X];
+    if(b3){let forced=0; const g=T[X].g;
+      for(const h of GL){if(h===g)continue; if(thirds[h].every(tr=>betterRec(tr,b3)))forced++;}
+      if(forced<=7)continue;
+    }
+    elim.add(X);
+  }
+  return elim;
+}
 function simulate(N){
   const adv={};Object.keys(T).forEach(k=>adv[k]=0);
   for(let s=0;s<N;s++){
@@ -638,13 +691,13 @@ function simulate(N){
   Object.keys(adv).forEach(k=>adv[k]/=N); return adv;
 }
 function renderStandings(){
-  const st=currentStandings(), body=document.getElementById("standingsBody"); let html="";
+  const st=currentStandings(), elim=computeEliminated(), body=document.getElementById("standingsBody"); let html="";
   for(const g of GL){const rk=sortGroup(GROUPS[g],st);
     html+=`<div class="stgroup"><h3>Gruppe ${g}</h3><table class="st"><thead><tr>
       <th class="l">Team</th><th>Sp</th><th>P</th><th>TD</th><th>Goals</th><th>% AF</th></tr></thead><tbody>`;
-    rk.forEach((k,i)=>{const s=st[k],pc=ADV[k]!=null?Math.round(ADV[k]*100):null;
-      html+=`<tr class="${i<2?'qual':''}"><td class="l">${FLAG[k]} ${NAME[k]}</td><td>${s.pl}</td><td><b>${s.p}</b></td>
-        <td>${s.gd>0?'+':''}${s.gd}</td><td>${s.gf}:${s.ga}</td><td class="adv"><span class="pct">${pc!=null?pc+'%':'–'}</span></td></tr>`;});
+    rk.forEach((k,i)=>{const s=st[k],out=elim.has(k),pc=out?0:(ADV[k]!=null?Math.round(ADV[k]*100):null);
+      html+=`<tr class="${i<2?'qual':''}${out?' elimrow':''}"><td class="l">${FLAG[k]} ${NAME[k]}</td><td>${s.pl}</td><td><b>${s.p}</b></td>
+        <td>${s.gd>0?'+':''}${s.gd}</td><td>${s.gf}:${s.ga}</td><td class="adv"><span class="pct${out?' elim':''}">${out?'0%':(pc!=null?pc+'%':'–')}</span></td></tr>`;});
     html+=`</tbody></table></div>`;}
   body.innerHTML=html;
   renderEloStand();
