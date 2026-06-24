@@ -45,7 +45,7 @@ const ALIASES = {
   Iran: ["Iran", "IR Iran", "Islamic Republic of Iran"],
   NewZealand: ["New Zealand"],
   Spain: ["Spain"],
-  CapeVerde: ["Cape Verde", "Cabo Verde"],
+  CapeVerde: ["Cape Verde", "Cape Verde Islands", "Cabo Verde"],
   SaudiArabia: ["Saudi Arabia"],
   Uruguay: ["Uruguay"],
   France: ["France"],
