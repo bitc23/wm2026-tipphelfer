@@ -619,22 +619,54 @@ function currentStandings(){
     if(r.rh>r.ra)st[m.h].p+=3;else if(r.rh<r.ra)st[m.a].p+=3;else{st[m.h].p++;st[m.a].p++;}}
   Object.keys(st).forEach(k=>st[k].gd=st[k].gf-st[k].ga); return st;
 }
-function sortGroup(keys,st){return keys.slice().sort((a,b)=>st[b].p-st[a].p||st[b].gd-st[a].gd||st[b].gf-st[a].gf||(T[b].r-T[a].r));}
+/* ===== FIFA-2026-Gruppe-Rangierig =====
+   Punktegliichstand wird zerst über de DIREKTE Vergliich (Head-to-Head) broche —
+   nöd über d Gesamt-Tordifferänz wie früener:
+     1) Punkt  2) H2H-Punkt  3) H2H-Tordiff  4) H2H-Tore
+     5) Gesamt-Tordiff  6) Gesamt-Tore  7) FIFA-Ranking (Elo als Proxy)
+   D H2H-Kriterie werded nu uf di gliichstande Teams agwändt und — wenn ene Teilmänge
+   wiiterhin gliich isch — uf die Teilmänge neu agwändt (rekursiv), genau wie d FIFA-Regel.
+   `results`=Liste {h,a,hg,ag} vo de relevante Spiel; `favor`=Team wo en unentscheidbare
+   Schluss-Gliichstand z sine Gunste broche wird (für d Elimination-Prüefig). */
+function h2hStats(teams,results){const set=new Set(teams),h={};teams.forEach(t=>h[t]={p:0,gf:0,ga:0});
+  for(const r of results)if(set.has(r.h)&&set.has(r.a)){h[r.h].gf+=r.hg;h[r.h].ga+=r.ag;h[r.a].gf+=r.ag;h[r.a].ga+=r.hg;
+    if(r.hg>r.ag)h[r.h].p+=3;else if(r.hg<r.ag)h[r.a].p+=3;else{h[r.h].p++;h[r.a].p++;}}
+  return h;}
+function breakTie(tied,results,st,favor){
+  if(tied.length<=1)return tied.slice();
+  const h=h2hStats(tied,results),gd=t=>h[t].gf-h[t].ga;
+  const sorted=tied.slice().sort((a,b)=>h[b].p-h[a].p||gd(b)-gd(a)||h[b].gf-h[a].gf);
+  const subs=[]; let i=0;
+  while(i<sorted.length){let j=i+1;while(j<sorted.length&&h[sorted[j]].p===h[sorted[i]].p&&gd(sorted[j])===gd(sorted[i])&&h[sorted[j]].gf===h[sorted[i]].gf)j++;subs.push(sorted.slice(i,j));i=j;}
+  if(subs.length===1)  // H2H cha nöd träne -> Gesamt-Kriterie, denn favor, denn Elo
+    return tied.slice().sort((a,b)=>st[b].gd-st[a].gd||st[b].gf-st[a].gf||(favor===a?-1:favor===b?1:0)||(T[b].r-T[a].r));
+  const out=[]; for(const s of subs)out.push(...breakTie(s,results,st,favor)); return out;
+}
+function rankGroup(teams,results,st,favor){
+  const order=teams.slice().sort((a,b)=>st[b].p-st[a].p); const out=[]; let i=0;
+  while(i<order.length){let j=i+1;while(j<order.length&&st[order[j]].p===st[order[i]].p)j++;
+    out.push(...breakTie(order.slice(i,j),results,st,favor));i=j;}
+  return out;
+}
+function groupResults(teams){const set=new Set(teams),res=[];for(const m of M){if(set.has(m.h)&&set.has(m.a)){const r=R[m.id];if(r&&r.rh!=null&&r.ra!=null)res.push({h:m.h,a:m.a,hg:r.rh,ag:r.ra});}}return res;}
+function sortGroup(keys,st){return rankGroup(keys,groupResults(keys),st,null);}
 /* ===== Exakti mathematischi Elimination =====
    E Team chunnt uf 0%, wenn s under KEINER Kombination vo de no offene Resultat
    no cha wiiterchoo — weder als Top-2 no als eine vo de 8 beschte Gruppe-Dritte.
    Wird nu grächnet, wenn jedi Gruppe <=2 Spiel offe het (susch isch eh niemer use
    und d Enumeration bliibt billig). Margine >9 sind fürs Feasibility irrelevant. */
-const ELIMG=9;
+const ELIMG=7;  // Tor-Range 0..7 pro restlichs Spiel — Margine drüber sind fürs Feasibility irrelevant
+// Gruppe-übergriifende Dritt-Vergliich: KEIS H2H (verschideni Gruppe), drum Gesamt-Tordiff/-Tore.
 function betterRec(a,b){return a.p>b.p||(a.p===b.p&&(a.gd>b.gd||(a.gd===b.gd&&a.gf>b.gf)));}
 function computeEliminated(){
   const elim=new Set();
-  const rem={}; GL.forEach(g=>rem[g]=[]);
+  const rem={}, played={}; GL.forEach(g=>{rem[g]=[];played[g]=[];});
   const base={}; Object.keys(T).forEach(k=>base[k]={p:0,gf:0,ga:0});
   for(const m of M){const r=R[m.id];
     if(r&&r.rh!=null&&r.ra!=null){
       base[m.h].p+=r.rh>r.ra?3:r.rh===r.ra?1:0; base[m.a].p+=r.ra>r.rh?3:r.rh===r.ra?1:0;
       base[m.h].gf+=r.rh;base[m.h].ga+=r.ra;base[m.a].gf+=r.ra;base[m.a].ga+=r.rh;
+      played[m.g].push({h:m.h,a:m.a,hg:r.rh,ag:r.ra});
     } else rem[m.g].push([m.h,m.a]);
   }
   if(GL.some(g=>rem[g].length>2))return elim; // z früeh: niemer mathematisch use
@@ -644,19 +676,18 @@ function computeEliminated(){
     const recur=(i,extra)=>{
       if(i===rm.length){
         const recs={}; teams.forEach(k=>{const b=base[k];let p=b.p,gf=b.gf,ga=b.ga;
-          for(const[h,a,hg,ag]of extra){if(h===k){p+=hg>ag?3:hg===ag?1:0;gf+=hg;ga+=ag;}else if(a===k){p+=ag>hg?3:hg===ag?1:0;gf+=ag;ga+=hg;}}
+          for(const e of extra){if(e.h===k){p+=e.hg>e.ag?3:e.hg===e.ag?1:0;gf+=e.hg;ga+=e.ag;}else if(e.a===k){p+=e.ag>e.hg?3:e.hg===e.ag?1:0;gf+=e.ag;ga+=e.hg;}}
           recs[k]={p:p,gd:gf-ga,gf:gf};});
-        const ord=teams.slice().sort((x,y)=>betterRec(recs[x],recs[y])?-1:betterRec(recs[y],recs[x])?1:0);
-        thirds[g].push(recs[ord[2]]);
-        for(const k of teams){const rk=recs[k]; let sb=0,sw=0;
-          for(const o of teams){if(o===k)continue; if(betterRec(recs[o],rk))sb++; else if(betterRec(rk,recs[o]))sw++;}
-          if(sb<=1)top2[k]=true;
-          if(sb<=2&&sw>=1&&(!best3[k]||betterRec(rk,best3[k])))best3[k]=rk;
+        const full=played[g].concat(extra);
+        thirds[g].push(recs[rankGroup(teams,full,recs,null)[2]]);  // de offiziell 3. (FIFA-rangiert)
+        for(const X of teams){const pos=rankGroup(teams,full,recs,X).indexOf(X);  // X favorabel rangiert
+          if(pos<=1)top2[X]=true;
+          else if(pos===2&&(!best3[X]||betterRec(recs[X],best3[X])))best3[X]=recs[X];
         }
         return;
       }
       const[h,a]=rm[i];
-      for(let hg=0;hg<=ELIMG;hg++)for(let ag=0;ag<=ELIMG;ag++)recur(i+1,extra.concat([[h,a,hg,ag]]));
+      for(let hg=0;hg<=ELIMG;hg++)for(let ag=0;ag<=ELIMG;ag++)recur(i+1,extra.concat([{h:h,a:a,hg:hg,ag:ag}]));
     };
     recur(0,[]);
   }
@@ -665,24 +696,32 @@ function computeEliminated(){
     const b3=best3[X];
     if(b3){let forced=0; const g=T[X].g;
       for(const h of GL){if(h===g)continue; if(thirds[h].every(tr=>betterRec(tr,b3)))forced++;}
-      if(forced<=7)continue;
+      if(forced<=7)continue;  // <=7 anderi Dritt über X -> X isch under de beschte 8
     }
     elim.add(X);
   }
   return elim;
 }
+let ELIM=new Set(), ELIM_KEY=null;  // Cache: nu neu rächne, wenn sich Resultat ändered
+function getEliminated(){
+  let sig=""; for(const m of M){const r=R[m.id]; if(r&&r.rh!=null&&r.ra!=null)sig+=m.id+":"+r.rh+","+r.ra+";";}
+  if(sig!==ELIM_KEY){ELIM_KEY=sig;ELIM=computeEliminated();}
+  return ELIM;
+}
 function simulate(N){
   const adv={};Object.keys(T).forEach(k=>adv[k]=0);
   for(let s=0;s<N;s++){
     const st={};Object.keys(T).forEach(k=>st[k]={p:0,gf:0,ga:0});
+    const gres={};GL.forEach(g=>gres[g]=[]);
     for(const m of M){let rh,ra;const r=R[m.id];
       if(r&&r.rh!=null&&r.ra!=null){rh=r.rh;ra=r.ra;}else{[rh,ra]=sampleCDF(m.cdf);}
       st[m.h].gf+=rh;st[m.h].ga+=ra;st[m.a].gf+=ra;st[m.a].ga+=rh;
-      if(rh>ra)st[m.h].p+=3;else if(rh<ra)st[m.a].p+=3;else{st[m.h].p++;st[m.a].p++;}}
+      if(rh>ra)st[m.h].p+=3;else if(rh<ra)st[m.a].p+=3;else{st[m.h].p++;st[m.a].p++;}
+      gres[m.g].push({h:m.h,a:m.a,hg:rh,ag:ra});}
     Object.keys(st).forEach(k=>st[k].gd=st[k].gf-st[k].ga);
     const thirds=[];
     for(const g of GL){
-      const rk=GROUPS[g].slice().sort((a,b)=>st[b].p-st[a].p||st[b].gd-st[a].gd||st[b].gf-st[a].gf||(Math.random()-0.5));
+      const rk=rankGroup(GROUPS[g],gres[g],st,null);  // FIFA-2026: Punkt -> H2H -> Gesamt
       adv[rk[0]]++;adv[rk[1]]++; thirds.push({k:rk[2],p:st[rk[2]].p,gd:st[rk[2]].gd,gf:st[rk[2]].gf});
     }
     thirds.sort((a,b)=>b.p-a.p||b.gd-a.gd||b.gf-a.gf||(Math.random()-0.5));
@@ -691,7 +730,7 @@ function simulate(N){
   Object.keys(adv).forEach(k=>adv[k]/=N); return adv;
 }
 function renderStandings(){
-  const st=currentStandings(), elim=computeEliminated(), body=document.getElementById("standingsBody"); let html="";
+  const st=currentStandings(), elim=getEliminated(), body=document.getElementById("standingsBody"); let html="";
   for(const g of GL){const rk=sortGroup(GROUPS[g],st);
     html+=`<div class="stgroup"><h3>Gruppe ${g}</h3><table class="st"><thead><tr>
       <th class="l">Team</th><th>Sp</th><th>P</th><th>TD</th><th>Goals</th><th>% AF</th></tr></thead><tbody>`;
