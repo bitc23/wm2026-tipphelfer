@@ -445,7 +445,7 @@ async function saveResults(){
 /* ===== Offizielli Resultat (results.json, täglich vomene GitHub-Action aktualisiert) =====
    D Tester müend so kei Resultat meh vo Hand iitrage — die werded automatisch gfüllt,
    si tippe nu no sälber. Schlüssel = sortierts Team-Paar + grp/ko (gliich wie update-results.mjs). */
-let OFFICIAL=null, resStand=null;
+let OFFICIAL=null, KOFEED=null, resStand=null;
 function pairKey(a,b,ko){return [a,b].sort().join("|")+"|"+(ko?"ko":"grp");}
 function validRes(o){return o&&Number.isInteger(o.hs)&&Number.isInteger(o.as);}
 function applyOfficial(){
@@ -456,7 +456,7 @@ function applyOfficial(){
     R[m.id].rh=hh?o.hs:o.as; R[m.id].ra=hh?o.as:o.hs;
   }
   for(const m of KO){
-    const ta=resolveSlot(m.A),tb=resolveSlot(m.B); if(!ta||!tb)continue;
+    const ta=teamInMatch(m.id,"A"),tb=teamInMatch(m.id,"B"); if(!ta||!tb)continue;
     const o=OFFICIAL[pairKey(ta,tb,true)]; if(!validRes(o))continue;
     KR[m.id]=KR[m.id]||{}; const ha=o.home===ta;
     KR[m.id].rh=ha?o.hs:o.as; KR[m.id].ra=ha?o.as:o.hs;
@@ -471,6 +471,7 @@ async function fetchLiveResults(){
     const data=await res.json();
     if(!data||typeof data.results!=="object")return false;
     OFFICIAL=data.results;
+    KOFEED=(data.ko_pairs&&typeof data.ko_pairs==="object")?data.ko_pairs:{};
     resStand=typeof data.updated==="string"&&/^\d{4}-\d{2}-\d{2}$/.test(data.updated)?data.updated:null;
     applyOfficial();
     return true;
@@ -804,12 +805,20 @@ function bestThirds(){
   return {assign:assign,third:third};
 }
 function koWinner(id){const r=KR[id];if(!r||r.rh==null||r.ra==null)return null;if(r.rh>r.ra)return "A";if(r.rh<r.ra)return "B";return r.adv||null;}
+// teamInMatch: feed-authoritative Team-Auflösig für e KO-Spiel.
+// Wenn d offizielli KOFEED-Paarig (us results.json) en Iitrag het, gilt die — so umged mer
+// d Tiebreaker-Heuristik (P/GD/GF/Elo), wo i Edge-Cases vo FIFAs Tiebreakers chönt abwiiche.
+// Susch fallt's uf di slot-basierti Auflösig (W/R/3i us Standig, MW/ML rekursiv) zrugg.
+function teamInMatch(koId,side){
+  if(KOFEED){const p=KOFEED[koId]; if(p){const t=side==="A"?p.a:p.b; if(t&&T[t])return t;}}
+  return resolveSlot(KOMAP[koId][side]);
+}
 function resolveSlot(slot){
   if(slot.t==="W"){if(!grpDone(slot.g))return null;return sortGroup(GROUPS[slot.g],currentStandings())[0];}
   if(slot.t==="R"){if(!grpDone(slot.g))return null;return sortGroup(GROUPS[slot.g],currentStandings())[1];}
   if(slot.t==="3i"){const bt=bestThirds();if(!bt||!bt.assign)return null;return bt.third[bt.assign[slot.i]];}
-  if(slot.t==="MW"){const w=koWinner(slot.m);if(!w)return null;return resolveSlot(KOMAP[slot.m][w]);}
-  if(slot.t==="ML"){const w=koWinner(slot.m);if(!w)return null;return resolveSlot(KOMAP[slot.m][w==="A"?"B":"A"]);}
+  if(slot.t==="MW"){const w=koWinner(slot.m);if(!w)return null;return teamInMatch(slot.m,w);}
+  if(slot.t==="ML"){const w=koWinner(slot.m);if(!w)return null;return teamInMatch(slot.m,w==="A"?"B":"A");}
   return null;
 }
 function phLabel(slot,mid){
@@ -828,7 +837,7 @@ function renderKO(){
   for(const rnd of order){
     html+='<div class="ko-round">'+ROUNDNAME[rnd]+'</div>';
     for(const m of KO){ if(m.r!==rnd)continue;
-      const ta=resolveSlot(m.A),tb=resolveSlot(m.B),r=KR[m.id]||{};
+      const ta=teamInMatch(m.id,"A"),tb=teamInMatch(m.id,"B"),r=KR[m.id]||{};
       const sideHTML=function(slot,team){return team?teamHTML(team):'<span class="team ko-ph">'+phLabel(slot,m.id)+'</span>';};
       let meta="";
       if(ta&&tb){const mat=buildMatrix(ta,tb),A=analyse(mat),tot=A.pw+A.pd+A.pl,tp=koTip(mat);

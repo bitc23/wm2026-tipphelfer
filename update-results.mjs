@@ -89,6 +89,122 @@ function validScore(n) {
   return Number.isInteger(n) && n >= SCORE_MIN && n <= SCORE_MAX;
 }
 
+// ===== K.O.-Bracket: feed-authoritative Mappig vo R32 =====
+// Sobald de FIFA-Draw publiziert isch, schriibed mer ko_pairs:{id:{a,b}} ind results.json,
+// demit index.html nöd uf di internalisierti Standings-Tiebreaker-Logik agwiesen isch
+// (sit P/GD/GF/Elo divergiere chönd vo de offizielle FIFA-Tiebreakers).
+// Mues 1:1 mit em T[]-Gruppe-Feld vo index.html überiistimme.
+const TEAM_GROUP = {
+  Mexico:"A", SouthAfrica:"A", SouthKorea:"A", Czechia:"A",
+  Canada:"B", Switzerland:"B", Qatar:"B", Bosnia:"B",
+  Brazil:"C", Morocco:"C", Haiti:"C", Scotland:"C",
+  USA:"D", Australia:"D", Paraguay:"D", Turkiye:"D",
+  Germany:"E", Curacao:"E", IvoryCoast:"E", Ecuador:"E",
+  Netherlands:"F", Japan:"F", Sweden:"F", Tunisia:"F",
+  Belgium:"G", Egypt:"G", Iran:"G", NewZealand:"G",
+  Spain:"H", CapeVerde:"H", SaudiArabia:"H", Uruguay:"H",
+  France:"I", Senegal:"I", Iraq:"I", Norway:"I",
+  Argentina:"J", Algeria:"J", Austria:"J", Jordan:"J",
+  Portugal:"K", DRCongo:"K", Uzbekistan:"K", Colombia:"K",
+  England:"L", Croatia:"L", Ghana:"L", Panama:"L"
+};
+
+// R32-Slot-Constraints, abgleitet vom KO[]-Array im index.html.
+// Jeder Slot het: groups = erlaubti Gruppe(n), pos = erforderlichi Gruppe-Position
+//   ("W" = Sieger, "R" = Zwöiti, "3" = 3.-Platzierti).
+// Mit Position-Info werded alli 16 R32-Slot eindütig — ohni Position-Info chönd
+// es paar ({F,C}-style) zwöideutig si und falled denn uf resolveSlot zrugg.
+const KO_R32 = [
+  { id:73, a:{ groups:"A",     pos:"R" }, b:{ groups:"B",     pos:"R" } },
+  { id:74, a:{ groups:"E",     pos:"W" }, b:{ groups:"ABCDF", pos:"3" } },
+  { id:75, a:{ groups:"F",     pos:"W" }, b:{ groups:"C",     pos:"R" } },
+  { id:76, a:{ groups:"C",     pos:"W" }, b:{ groups:"F",     pos:"R" } },
+  { id:77, a:{ groups:"I",     pos:"W" }, b:{ groups:"CDFGH", pos:"3" } },
+  { id:78, a:{ groups:"E",     pos:"R" }, b:{ groups:"I",     pos:"R" } },
+  { id:79, a:{ groups:"A",     pos:"W" }, b:{ groups:"CEFHI", pos:"3" } },
+  { id:80, a:{ groups:"L",     pos:"W" }, b:{ groups:"EHIJK", pos:"3" } },
+  { id:81, a:{ groups:"D",     pos:"W" }, b:{ groups:"BEFIJ", pos:"3" } },
+  { id:82, a:{ groups:"G",     pos:"W" }, b:{ groups:"AEHIJ", pos:"3" } },
+  { id:83, a:{ groups:"K",     pos:"R" }, b:{ groups:"L",     pos:"R" } },
+  { id:84, a:{ groups:"H",     pos:"W" }, b:{ groups:"J",     pos:"R" } },
+  { id:85, a:{ groups:"B",     pos:"W" }, b:{ groups:"EFGIJ", pos:"3" } },
+  { id:86, a:{ groups:"J",     pos:"W" }, b:{ groups:"H",     pos:"R" } },
+  { id:87, a:{ groups:"K",     pos:"W" }, b:{ groups:"DEIJL", pos:"3" } },
+  { id:88, a:{ groups:"D",     pos:"R" }, b:{ groups:"G",     pos:"R" } }
+];
+
+function teamFitsSlot(slot, teamGroup, teamPos) {
+  if (!slot.groups.includes(teamGroup)) return false;
+  if (teamPos != null && teamPos !== slot.pos) return false;  // streng, wenn Position bekannt
+  return true;
+}
+
+// Mit Positions={teamKey: "W"|"R"|"3"|"4"} sind alli R32-Slot eindütig zueordebar.
+// Ohni: nu die Slot, wo s Gruppe-Paar eindütig isch (10 vo 16).
+function mapKoR32(homeKey, awayKey, positions) {
+  const gH = TEAM_GROUP[homeKey], gA = TEAM_GROUP[awayKey];
+  if (!gH || !gA) return null;
+  const pH = positions ? positions[homeKey] : null;
+  const pA = positions ? positions[awayKey] : null;
+  const candidates = new Map();
+  for (const s of KO_R32) {
+    if (teamFitsSlot(s.a, gH, pH) && teamFitsSlot(s.b, gA, pA))
+      candidates.set(`${s.id}|${homeKey}|${awayKey}`, { id: s.id, a: homeKey, b: awayKey });
+    if (teamFitsSlot(s.a, gA, pA) && teamFitsSlot(s.b, gH, pH))
+      candidates.set(`${s.id}|${awayKey}|${homeKey}`, { id: s.id, a: awayKey, b: homeKey });
+  }
+  return candidates.size === 1 ? [...candidates.values()][0] : null;
+}
+
+// Holt offizielli Gruppestandig vo football-data.org und git e {teamKey: "W"/"R"/"3"/"4"}-
+// Map zrugg. Bi Fähler/Antwortprobläm: null (mapKoR32 fallt denn uf gruppe-only-Modus zrugg).
+async function fetchStandings() {
+  try {
+    const res = await fetch("https://api.football-data.org/v4/competitions/WC/standings", {
+      headers: { "X-Auth-Token": TOKEN },
+      signal: AbortSignal.timeout(30000)
+    });
+    if (!res.ok) { console.warn(`Standings: HTTP ${res.status} — KO-Mappig nur eindütig`); return null; }
+    const data = await res.json();
+    if (!data || !Array.isArray(data.standings)) { console.warn("Standings: unerwartets Format"); return null; }
+    const positions = {};
+    for (const grp of data.standings) {
+      if (grp.stage !== "GROUP_STAGE" || grp.type !== "TOTAL" || !Array.isArray(grp.table)) continue;
+      for (const row of grp.table) {
+        const name = row.team && row.team.name;
+        const key = teamKey(name);
+        if (!key) continue;
+        if (row.position === 1) positions[key] = "W";
+        else if (row.position === 2) positions[key] = "R";
+        else if (row.position === 3) positions[key] = "3";
+        else positions[key] = "4";
+      }
+    }
+    return positions;
+  } catch (e) {
+    console.warn(`Standings: ${e.message} — KO-Mappig nur eindütig`);
+    return null;
+  }
+}
+
+// Sammli alli LAST_32-Spiel us de API (au nonig gspilti) und füll ko_pairs.
+function buildKoPairs(matches, positions) {
+  const pairs = {};
+  const ambiguous = [];
+  for (const m of matches) {
+    if (m.stage !== "LAST_32") continue;
+    const homeName = m.homeTeam && m.homeTeam.name;
+    const awayName = m.awayTeam && m.awayTeam.name;
+    if (!homeName || !awayName) continue;  // Draw nonig confirmiert -> Platzhalter ignoriere
+    const home = teamKey(homeName), away = teamKey(awayName);
+    if (!home || !away) continue;  // Unbekannti Name werded scho i buildResults gflaggt
+    const mapped = mapKoR32(home, away, positions);
+    if (mapped) pairs[mapped.id] = { a: mapped.a, b: mapped.b };
+    else ambiguous.push(`${homeName} vs ${awayName} (Gruppe ${TEAM_GROUP[home] || "?"}/${TEAM_GROUP[away] || "?"})`);
+  }
+  return { pairs, ambiguous };
+}
+
 async function fetchMatches() {
   const res = await fetch(API_URL, {
     headers: { "X-Auth-Token": TOKEN },
@@ -163,7 +279,9 @@ if (!TOKEN) {
 }
 
 const matches = await fetchMatches();
+const standings = await fetchStandings();  // null wenn nöd verfügbar — KO-Mappig fallt denn uf gruppe-only-Modus zrugg
 const { results, unknown, skipped } = buildResults(matches);
+const { pairs: koPairs, ambiguous } = buildKoPairs(matches, standings);
 
 if (unknown.length) {
   // Es unmappts Team isch e ächte Mappig-Lücke -> abbräche, statt e halbe Stand schriibe,
@@ -173,14 +291,24 @@ if (unknown.length) {
   process.exit(1);
 }
 if (skipped.length) skipped.forEach(s => console.warn(s));
+if (ambiguous.length) {
+  // Zwöideutigi R32-Slot (z.B. {C,F} -> M75 ODER M76): nöd fatal. index.html fallt
+  // bi sone Match uf d klassisch Standings-basierti Logik zrugg. Trotzdem logge,
+  // demit de Maintainer cha entscheide, ob er en Tiebreak-Heuristik mues nochiibaue.
+  console.warn("R32-Spiel ohni eindütigi Zuweisig (fallt uf interni Bracket-Logik zrugg):");
+  ambiguous.forEach(s => console.warn(`  ${s}`));
+}
 
 logDiff(results);
-const sorted = {};
-for (const k of Object.keys(results).sort()) sorted[k] = results[k];
+const sortedResults = {};
+for (const k of Object.keys(results).sort()) sortedResults[k] = results[k];
+const sortedKoPairs = {};
+for (const k of Object.keys(koPairs).sort((a, b) => +a - +b)) sortedKoPairs[k] = koPairs[k];
 const out = {
   updated: new Date().toISOString().slice(0, 10),
   source: "football-data.org",
-  results: sorted
+  results: sortedResults,
+  ko_pairs: sortedKoPairs
 };
 writeFileSync(OUT_FILE, JSON.stringify(out, null, 1) + "\n");
-console.log(`results.json aktualisiert (${Object.keys(sorted).length} gspilti Spiel)`);
+console.log(`results.json aktualisiert (${Object.keys(sortedResults).length} gspilti Spiel, ${Object.keys(sortedKoPairs).length} R32-Paarige).`);
