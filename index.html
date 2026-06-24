@@ -451,7 +451,7 @@ async function saveResults(){
 /* ===== Offizielli Resultat (results.json, täglich vomene GitHub-Action aktualisiert) =====
    D Tester müend so kei Resultat meh vo Hand iitrage — die werded automatisch gfüllt,
    si tippe nu no sälber. Schlüssel = sortierts Team-Paar + grp/ko (gliich wie update-results.mjs). */
-let OFFICIAL=null, KOFEED=null, resStand=null;
+let OFFICIAL=null, KOFEED=null, FROZEN=null, resStand=null;
 function pairKey(a,b,ko){return [a,b].sort().join("|")+"|"+(ko?"ko":"grp");}
 function validRes(o){return o&&Number.isInteger(o.hs)&&Number.isInteger(o.as);}
 function applyOfficial(){
@@ -478,6 +478,7 @@ async function fetchLiveResults(){
     if(!data||typeof data.results!=="object")return false;
     OFFICIAL=data.results;
     KOFEED=(data.ko_pairs&&typeof data.ko_pairs==="object")?data.ko_pairs:{};
+    FROZEN=(data.model_tips&&typeof data.model_tips==="object")?data.model_tips:{};
     resStand=typeof data.updated==="string"&&/^\d{4}-\d{2}-\d{2}$/.test(data.updated)?data.updated:null;
     applyOfficial();
     return true;
@@ -496,6 +497,12 @@ function fmtDate(iso){const d=D(iso);return `${DOW[d.getDay()]} ${String(d.getDa
 function fmtTime(iso){const d=D(iso);return `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;}
 function dayKey(iso){const d=D(iso);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;}
 function isLocked(iso){return Date.now()>=D(iso).getTime()-5*60000;}
+// Modell-Tipp fürs Gruppespiel m: sobald de Tipp zue isch (5 Min vor Aapfiff), gilt de
+// iigfroreni Tipp us results.json (vom Morge-Lauf), genau wie bim Mänsch. Susch de Live-Tipp.
+function frozenModelTip(m){
+  if(FROZEN&&isLocked(m.dt)){const f=FROZEN[pairKey(m.h,m.a,false)]; if(Array.isArray(f)&&f.length===2)return f;}
+  return m.an.tip;
+}
 function teamHTML(k){return `<span class="team" data-team="${k}"><span class="fl">${FLAG[k]}</span>${NAME[k]}</span>`;}
 function num(v){return v===""||v==null?null:Math.max(0,Math.min(30,parseInt(v,10)));}
 
@@ -504,7 +511,7 @@ function updateScoreboard(){
   let mTotal=0,mCnt=0;        // Modell: theoretisch über ALLI gspilte Spiel (Modell-Tipp vs Resultat)
   for(const m of M){const r=R[m.id]; if(!r||r.rh==null||r.ra==null)continue;
     if(r.th!=null&&r.ta!=null){total+=ptsFor(r.th,r.ta,r.rh,r.ra);cnt++;}
-    if(m.an&&m.an.tip){mTotal+=ptsFor(m.an.tip[0],m.an.tip[1],r.rh,r.ra);mCnt++;}
+    if(m.an&&m.an.tip){const mt=frozenModelTip(m);mTotal+=ptsFor(mt[0],mt[1],r.rh,r.ra);mCnt++;}
   }
   for(const m of KO){const r=KR[m.id]; if(!r||r.rh==null||r.ra==null)continue;
     if(r.th!=null&&r.ta!=null){total+=ptsKO(r.th,r.ta,r.rh,r.ra);cnt++;}
@@ -532,7 +539,7 @@ function renderSchedule(){
   let html="",lastDay="";
   for(const m of list){
     const dk=dayKey(m.dt); if(dk!==lastDay){html+=`<div class="dayhead">${fmtDate(m.dt)}</div>`;lastDay=dk;}
-    const A=m.an, tot=A.pw+A.pd+A.pl, wW=A.pw/tot*100,wD=A.pd/tot*100,wL=A.pl/tot*100;
+    const A=m.an, mt=frozenModelTip(m), tot=A.pw+A.pd+A.pl, wW=A.pw/tot*100,wD=A.pd/tot*100,wL=A.pl/tot*100;
     const swiss=(SWISSREL.has(m.h)||SWISSREL.has(m.a)), locked=isLocked(m.dt), r=R[m.id]||{};
     const h2h=H2H[m.h+"|"+m.a];
     let pt="",ptcls="empty";
@@ -545,7 +552,7 @@ function renderSchedule(){
         <div class="m-meta">
           ${h2h?`<span class="h2h">⟳ ${h2h}</span>`:`<span class="h2h">⟳ keis WM22/EM24-Duell</span>`}
         </div>
-        <div class="tiprec">Modell-Tipp <b>${A.tip[0]}:${A.tip[1]}</b><span class="copytip" data-copy="${m.id}">▣ übernäh</span></div>
+        <div class="tiprec">Modell-Tipp <b>${mt[0]}:${mt[1]}</b><span class="copytip" data-copy="${m.id}">▣ übernäh</span></div>
         <div class="probbar"><i class="pb-w" style="width:${wW}%"></i><i class="pb-d" style="width:${wD}%"></i><i class="pb-l" style="width:${wL}%"></i></div>
       </div>
       <div class="m-entry">
@@ -577,12 +584,12 @@ function onEntry(e){
   else {pl.textContent='';pl.className='ptline empty';}
 }
 function onCopyTip(e){
-  const id=+e.target.dataset.copy, m=M[id];
-  R[id]=R[id]||{}; R[id].th=m.an.tip[0]; R[id].ta=m.an.tip[1];
+  const id=+e.target.dataset.copy, m=M[id], mt=frozenModelTip(m);
+  R[id]=R[id]||{}; R[id].th=mt[0]; R[id].ta=mt[1];
   saveResults();
   const card=e.target.closest('.match');
-  card.querySelector('input[data-k="th"]').value=m.an.tip[0];
-  card.querySelector('input[data-k="ta"]').value=m.an.tip[1];
+  card.querySelector('input[data-k="th"]').value=mt[0];
+  card.querySelector('input[data-k="ta"]').value=mt[1];
   const r=R[id], pl=card.querySelector('.ptline');
   if(r.rh!=null&&r.ra!=null){const gp=ptsFor(r.th,r.ta,r.rh,r.ra);pl.textContent=`+${gp} P`;pl.className='ptline '+(gp>0?'':'zero');}
   else {pl.textContent='Tipp gsetzt';pl.className='ptline empty';}

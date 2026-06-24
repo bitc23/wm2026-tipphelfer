@@ -242,5 +242,296 @@
    "hs": 5,
    "as": 1
   }
+ },
+ "ko_pairs": {},
+ "model_tips": {
+  "Algeria|Argentina|grp": [
+   3,
+   1
+  ],
+  "Algeria|Austria|grp": [
+   1,
+   1
+  ],
+  "Algeria|Jordan|grp": [
+   1,
+   2
+  ],
+  "Argentina|Austria|grp": [
+   2,
+   1
+  ],
+  "Argentina|Jordan|grp": [
+   0,
+   3
+  ],
+  "Australia|Paraguay|grp": [
+   1,
+   1
+  ],
+  "Australia|Turkiye|grp": [
+   1,
+   1
+  ],
+  "Australia|USA|grp": [
+   1,
+   1
+  ],
+  "Austria|Jordan|grp": [
+   2,
+   1
+  ],
+  "Belgium|Egypt|grp": [
+   2,
+   1
+  ],
+  "Belgium|Iran|grp": [
+   2,
+   1
+  ],
+  "Belgium|NewZealand|grp": [
+   1,
+   2
+  ],
+  "Bosnia|Canada|grp": [
+   2,
+   1
+  ],
+  "Bosnia|Qatar|grp": [
+   2,
+   1
+  ],
+  "Bosnia|Switzerland|grp": [
+   2,
+   1
+  ],
+  "Brazil|Haiti|grp": [
+   3,
+   0
+  ],
+  "Brazil|Morocco|grp": [
+   2,
+   1
+  ],
+  "Brazil|Scotland|grp": [
+   1,
+   2
+  ],
+  "Canada|Qatar|grp": [
+   3,
+   1
+  ],
+  "Canada|Switzerland|grp": [
+   2,
+   1
+  ],
+  "CapeVerde|SaudiArabia|grp": [
+   1,
+   1
+  ],
+  "CapeVerde|Spain|grp": [
+   3,
+   0
+  ],
+  "CapeVerde|Uruguay|grp": [
+   2,
+   1
+  ],
+  "Colombia|DRCongo|grp": [
+   2,
+   1
+  ],
+  "Colombia|Portugal|grp": [
+   1,
+   1
+  ],
+  "Colombia|Uzbekistan|grp": [
+   1,
+   2
+  ],
+  "Croatia|England|grp": [
+   2,
+   1
+  ],
+  "Croatia|Ghana|grp": [
+   2,
+   1
+  ],
+  "Croatia|Panama|grp": [
+   1,
+   2
+  ],
+  "Curacao|Ecuador|grp": [
+   3,
+   1
+  ],
+  "Curacao|Germany|grp": [
+   3,
+   0
+  ],
+  "Curacao|IvoryCoast|grp": [
+   1,
+   2
+  ],
+  "Czechia|Mexico|grp": [
+   1,
+   2
+  ],
+  "Czechia|SouthAfrica|grp": [
+   2,
+   1
+  ],
+  "Czechia|SouthKorea|grp": [
+   1,
+   1
+  ],
+  "DRCongo|Portugal|grp": [
+   2,
+   1
+  ],
+  "DRCongo|Uzbekistan|grp": [
+   1,
+   1
+  ],
+  "Ecuador|Germany|grp": [
+   1,
+   2
+  ],
+  "Ecuador|IvoryCoast|grp": [
+   1,
+   2
+  ],
+  "Egypt|Iran|grp": [
+   1,
+   1
+  ],
+  "Egypt|NewZealand|grp": [
+   1,
+   2
+  ],
+  "England|Ghana|grp": [
+   3,
+   0
+  ],
+  "England|Panama|grp": [
+   1,
+   3
+  ],
+  "France|Iraq|grp": [
+   3,
+   0
+  ],
+  "France|Norway|grp": [
+   1,
+   2
+  ],
+  "France|Senegal|grp": [
+   2,
+   1
+  ],
+  "Germany|IvoryCoast|grp": [
+   2,
+   1
+  ],
+  "Ghana|Panama|grp": [
+   1,
+   1
+  ],
+  "Haiti|Morocco|grp": [
+   3,
+   1
+  ],
+  "Haiti|Scotland|grp": [
+   1,
+   2
+  ],
+  "Iran|NewZealand|grp": [
+   2,
+   1
+  ],
+  "Iraq|Norway|grp": [
+   1,
+   3
+  ],
+  "Iraq|Senegal|grp": [
+   2,
+   1
+  ],
+  "Japan|Netherlands|grp": [
+   1,
+   1
+  ],
+  "Japan|Sweden|grp": [
+   2,
+   1
+  ],
+  "Japan|Tunisia|grp": [
+   1,
+   3
+  ],
+  "Mexico|SouthAfrica|grp": [
+   3,
+   1
+  ],
+  "Mexico|SouthKorea|grp": [
+   2,
+   1
+  ],
+  "Morocco|Scotland|grp": [
+   1,
+   2
+  ],
+  "Netherlands|Sweden|grp": [
+   2,
+   1
+  ],
+  "Netherlands|Tunisia|grp": [
+   1,
+   3
+  ],
+  "Norway|Senegal|grp": [
+   2,
+   1
+  ],
+  "Paraguay|Turkiye|grp": [
+   1,
+   1
+  ],
+  "Paraguay|USA|grp": [
+   1,
+   1
+  ],
+  "Portugal|Uzbekistan|grp": [
+   2,
+   1
+  ],
+  "Qatar|Switzerland|grp": [
+   0,
+   3
+  ],
+  "SaudiArabia|Spain|grp": [
+   4,
+   0
+  ],
+  "SaudiArabia|Uruguay|grp": [
+   1,
+   2
+  ],
+  "SouthAfrica|SouthKorea|grp": [
+   1,
+   2
+  ],
+  "Spain|Uruguay|grp": [
+   1,
+   2
+  ],
+  "Sweden|Tunisia|grp": [
+   2,
+   1
+  ],
+  "Turkiye|USA|grp": [
+   1,
+   1
+  ]
  }
 }

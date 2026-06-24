@@ -257,6 +257,71 @@ function buildResults(matches) {
   return { results, unknown: [...unknown], skipped };
 }
 
+// ===== Modell-Tipp iifriere (gliichi Logik wie de Mänsch: Tipp zue 5 Min vor Aapfiff) =====
+// De Modell-Tipp hänkt nu vo de Elo ab; d Elo wird täglich am Morge aktualisiert und
+// zwüsche Morge-Update und Aapfiff passiert nüt. Drum: bi jedem Lauf de Tipp vo allne no
+// OFFENE Gruppespiel mit de aktuelle Elo neu setze; gschlosseni (Aapfiff-5Min verbii) werded
+// nüm aagrührt -> ihre Tipp isch iigfrore, genau wie bim Mänsch (kei Look-ahead über d Elo).
+// S Modell läbt im index.html; mer läse Spielplan + Kalibrierig vo dört, damit nüt drift.
+const INDEX_FILE = new URL("./index.html", import.meta.url);
+const ELO_FILE = new URL("./elo.json", import.meta.url);
+const LOCK_MS = 5 * 60000;
+let MU, GAMMA, MAXG, RHO;
+
+function pois(l, k) { let p = Math.exp(-l); for (let i = 1; i <= k; i++) p *= l / i; return p; }
+function tipFromRatings(rh, ra) {  // 1:1 wie analyse()/lambdas() im index.html
+  const d = rh - ra;
+  const lh = Math.max(0.05, Math.min(4.0, MU * Math.exp(GAMMA * d)));
+  const la = Math.max(0.05, Math.min(4.0, MU * Math.exp(-GAMMA * d)));
+  const m = []; let sum = 0;
+  for (let i = 0; i <= MAXG; i++) { m[i] = []; for (let j = 0; j <= MAXG; j++) {
+    let p = pois(lh, i) * pois(la, j), tau = 1;
+    if (i === 0 && j === 0) tau = 1 - lh * la * RHO; else if (i === 0 && j === 1) tau = 1 + lh * RHO;
+    else if (i === 1 && j === 0) tau = 1 + la * RHO; else if (i === 1 && j === 1) tau = 1 - RHO;
+    p *= Math.max(0.0001, tau); m[i][j] = p; sum += p;
+  } }
+  let eh = 0, ea = 0;
+  for (let i = 0; i <= MAXG; i++) for (let j = 0; j <= MAXG; j++) { const p = m[i][j] / sum; eh += i * p; ea += j * p; }
+  let tH = Math.round(eh), tA = Math.round(ea); const diff = eh - ea;
+  if (diff >= 0.5 && tH <= tA) tH = tA + 1; else if (-diff >= 0.5 && tA <= tH) tA = tH + 1;
+  return [tH, tA];
+}
+function readCalibration(html) {
+  const a = /const MU=([\d.]+)\s*,\s*GAMMA=([\d.]+)/.exec(html);
+  const b = /const MAXG=(\d+)\s*,\s*RHO=(-?[\d.]+)/.exec(html);
+  if (!a || !b) throw new Error("Modell-Konstante (MU/GAMMA/MAXG/RHO) nöd im index.html gfunde");
+  MU = +a[1]; GAMMA = +a[2]; MAXG = +b[1]; RHO = +b[2];
+}
+function extractFixtures(html) {  // d Gruppespiel-Liste (const M=[...]) us index.html
+  const m = html.match(/const M=\[([\s\S]*?)\]\.map\(/);
+  if (!m) throw new Error("Spielplan (const M) nöd im index.html gfunde");
+  return JSON.parse("[" + m[1] + "]").map(x => ({ g: x[0], h: x[1], a: x[2], dt: x[3] }));
+}
+function buildModelTips(prev) {
+  let html, ratings;
+  try {
+    html = readFileSync(INDEX_FILE, "utf8");
+    ratings = JSON.parse(readFileSync(ELO_FILE, "utf8")).ratings;
+    readCalibration(html);
+  } catch (e) { console.warn("Modell-Tipp iifriere übersprunge: " + e.message); return prev || {}; }
+  let fixtures;
+  try { fixtures = extractFixtures(html); }
+  catch (e) { console.warn("Modell-Tipp iifriere übersprunge: " + e.message); return prev || {}; }
+  const now = Date.now(); const tips = {}; let frozen = 0, refreshed = 0, fallback = 0;
+  for (const f of fixtures) {
+    const key = pairKey(f.h, f.a, false);
+    const lockMs = new Date(f.dt + ":00+02:00").getTime() - LOCK_MS;
+    if (now >= lockMs && prev && prev[key]) { tips[key] = prev[key]; frozen++; continue; } // zue -> iigfrore lah
+    const rh = ratings[f.h], ra = ratings[f.a];
+    if (!Number.isInteger(rh) || !Number.isInteger(ra)) { if (prev && prev[key]) tips[key] = prev[key]; continue; }
+    tips[key] = tipFromRatings(rh, ra);
+    if (now >= lockMs) fallback++; else refreshed++;  // fallback = scho zue, aber no kei iigfroreni Wert (Erstlauf)
+  }
+  console.log(`Modell-Tipp: ${refreshed} aktualisiert (offe), ${frozen} iigfrore (zue)` +
+    (fallback ? `, ${fallback} nochträglich gsetzt (scho zue, kei früecheri Wert)` : ""));
+  return tips;
+}
+
 function logDiff(results) {
   let old = null;
   try { old = JSON.parse(readFileSync(OUT_FILE, "utf8")).results; } catch (e) { /* no kei results.json */ }
@@ -299,16 +364,23 @@ if (ambiguous.length) {
   ambiguous.forEach(s => console.warn(`  ${s}`));
 }
 
+let prevModelTips = {};
+try { prevModelTips = JSON.parse(readFileSync(OUT_FILE, "utf8")).model_tips || {}; } catch (e) { /* no kei results.json */ }
+const modelTips = buildModelTips(prevModelTips);
+
 logDiff(results);
 const sortedResults = {};
 for (const k of Object.keys(results).sort()) sortedResults[k] = results[k];
 const sortedKoPairs = {};
 for (const k of Object.keys(koPairs).sort((a, b) => +a - +b)) sortedKoPairs[k] = koPairs[k];
+const sortedModelTips = {};
+for (const k of Object.keys(modelTips).sort()) sortedModelTips[k] = modelTips[k];
 const out = {
   updated: new Date().toISOString().slice(0, 10),
   source: "football-data.org",
   results: sortedResults,
-  ko_pairs: sortedKoPairs
+  ko_pairs: sortedKoPairs,
+  model_tips: sortedModelTips
 };
 writeFileSync(OUT_FILE, JSON.stringify(out, null, 1) + "\n");
-console.log(`results.json aktualisiert (${Object.keys(sortedResults).length} gspilti Spiel, ${Object.keys(sortedKoPairs).length} R32-Paarige).`);
+console.log(`results.json aktualisiert (${Object.keys(sortedResults).length} gspilti Spiel, ${Object.keys(sortedKoPairs).length} R32-Paarige, ${Object.keys(sortedModelTips).length} Modell-Tipps).`);
