@@ -132,10 +132,6 @@
 
   .foot{margin-top:24px; padding-top:14px; border-top:1px solid var(--line); font-size:11.5px; color:var(--muted2)}
   .hidden{display:none !important}
-  .recalc-wrap{position:fixed; left:0; right:0; bottom:14px; z-index:25; display:flex; justify-content:center; pointer-events:none}
-  .recalc{pointer-events:auto; box-shadow:0 8px 30px rgba(0,0,0,.55); padding:12px 22px; font-size:15px; border-radius:999px}
-  .spin{display:inline-block; width:13px; height:13px; border:2px solid rgba(12,15,13,.3); border-top-color:#0c0f0d; border-radius:50%; animation:sp .7s linear infinite; vertical-align:-2px; margin-right:7px}
-  @keyframes sp{to{transform:rotate(360deg)}}
   details.rules{background:var(--card); border:1px solid var(--line); border-radius:11px; padding:0 14px; margin:10px 0 0}
   details.rules summary{cursor:pointer; padding:11px 0; font-family:var(--disp); font-weight:600; font-size:14px; color:var(--lime-dim)}
   details.rules ul{margin:0 0 12px; padding-left:18px; font-size:13px; color:var(--muted)} details.rules b{color:var(--ink); font-family:var(--mono)}
@@ -230,7 +226,7 @@
 
   <!-- STANDINGS -->
   <section id="view-standings" class="hidden">
-    <div class="note">D <span style="color:var(--lime)">% Achtelfinal</span> chunnt us bis zu <b id="simN">50'000</b> simulierte Turnier-Verläuf: iigetrageni Resultat sind fix, de Räscht wird mit em Modell gwürflet. Top 2 jeder Gruppe + die 8 beschte Dritte chömed witer.<span id="eloStand"></span></div>
+    <div class="note">Tabelle &amp; <span style="color:var(--lime)">% Achtelfinal</span> aktualisiere sich automatisch us de offizielle Resultat. D Chance chunnt us <b id="simN">50'000</b> simulierte Turnier-Verläuf: gspilti Resultat sind fix, de Räscht wird mit em Modell gwürflet. Top 2 jeder Gruppe + die 8 beschte Dritte chömed witer.<span id="eloStand"></span></div>
     <div class="legend"><i style="background:var(--lime)"></i>Platz 1–2 (direkt) — % Achtelfinal inkl. Dritte-Chance</div>
     <div id="standingsBody"></div>
   </section>
@@ -277,8 +273,6 @@
     Stand ~8.6.2026 · Ziite = Schwiizer Ziit (MESZ). Modell & Tipp-Vorschläg sind Schätzige — am offizielle Portal d Anpfiffziit (–5 Min Deadline) verifiziere. Empirischi Resultat-Verteilig: 964 WM-Spiel (inkl. 2022). Alli Date blibed lokal im Browser.
   </div>
 </div>
-
-<div class="recalc-wrap"><button class="btn btn-primary recalc" id="recalcBtn">↻ Wahrschiinlichkeite neu berächne</button></div>
 
 <script>
 "use strict";
@@ -649,10 +643,10 @@ function switchView(v){
   ["schedule","teams","standings","ko","modell"].forEach(x=>document.getElementById("view-"+x).classList.toggle("hidden",x!==v));
   if(v==="teams")renderTeams(); if(v==="standings")renderStandings(); if(v==="ko")renderKO(); if(v==="modell")renderModell();
 }
+const SIM_N=50000;      // Simulatione fürd Chance — lauft automatisch im Hintergrund (kei Knopf meh)
 function deferSim(n){setTimeout(()=>{try{ADV=simulate(n);}catch(e){ADV={};}
   if(!document.getElementById("view-standings").classList.contains("hidden"))renderStandings();},60);}
 let eloStand=null;      // Datum vom zletscht glade Live-Elo (null = iibauti Wert aktiv)
-let userRecalced=false; // dass de init-Pfad kei 50'000er-Rechnig vom Benutzer überschriibt
 async function fetchLiveElo(){
   // Holt elo.json (wird täglich vomene GitHub-Action us eloratings.net aktualisiert).
   // Bi Fähler (offline, file://, kaputts JSON, Timeout) blibed eifach d iibaute ELO-Wert aktiv.
@@ -672,15 +666,6 @@ async function fetchLiveElo(){
 function renderEloStand(){
   const el=document.getElementById("eloStand"); if(!el)return;
   el.textContent=eloStand?` Elo-Stand: ${eloStand.split("-").reverse().join(".")} (eloratings.net).`:"";
-}
-async function recalc(){
-  const b=document.getElementById("recalcBtn");b.innerHTML='<span class="spin"></span>rechne 50\u2019000…';b.disabled=true;
-  await new Promise(r=>setTimeout(r,50));
-  userRecalced=true;
-  if(await fetchLiveElo())renderSchedule();  // frischs Elo -> au Modell-Tipps im Spielplan aktualisiere
-  try{ADV=simulate(50000);}catch(e){ADV={};}
-  await saveResults(); renderStandings(); switchView("standings");
-  b.innerHTML='↻ Wahrschiinlichkeite neu berächne';b.disabled=false;
 }
 function renderModell(){
   const sa=document.getElementById("modSelA"), sb=document.getElementById("modSelB");
@@ -711,9 +696,8 @@ document.querySelectorAll(".tab").forEach(t=>t.addEventListener("click",()=>swit
 document.addEventListener("click",function(e){var el=e.target.closest?e.target.closest("[data-team]"):null;if(!el)return;var k=el.getAttribute("data-team");if(!T[k])return;var gf=document.getElementById("grpFilterT");if(gf)gf.value="all";switchView("teams");var c=document.getElementById("tcard-"+k);if(c){c.scrollIntoView({behavior:"smooth",block:"center"});c.classList.add("flash");setTimeout(function(){c.classList.remove("flash");},1600);}});
 ["grpFilter","swissOnly","hideDone"].forEach(id=>document.getElementById(id).addEventListener("change",renderSchedule));
 ["grpFilterT","sortT"].forEach(id=>document.getElementById(id).addEventListener("change",renderTeams));
-document.getElementById("recalcBtn").addEventListener("click",recalc);
 document.getElementById("resetBtn").addEventListener("click",async()=>{
-  if(confirm("Alli iigetragene Tipps lösche? (Offizielli Resultat blibed.)")){R={};KR={};applyOfficial();await saveResults();koSave();renderSchedule();renderKO();ADV={};deferSim(10000);}
+  if(confirm("Alli iigetragene Tipps lösche? (Offizielli Resultat blibed.)")){R={};KR={};applyOfficial();await saveResults();koSave();renderSchedule();renderKO();deferSim(SIM_N);}
 });
 
 /* ===== Tipps exportiere / importiere (localStorage <-> JSON-Datei) ===== */
@@ -756,7 +740,7 @@ document.getElementById("importFile").addEventListener("change",async e=>{
     await loadResults();koLoad();
     applyOfficial();
     renderSchedule();renderKO();updateScoreboard();
-    ADV={};deferSim(10000);
+    deferSim(SIM_N);
     alert("Tipps erfolgriich importiert!");
   }catch(err){alert("Import fehlgschlage: "+err.message);}
 });
@@ -887,16 +871,16 @@ function onKoCopy(e){const id=+e.target.dataset.kocopy;KR[id]=KR[id]||{};KR[id].
   koLoad();
   try{await loadResults();}catch(e){}
   renderSchedule();        // gespeicherte Tipps übernehmen
-  fetchLiveResults().then(ok=>{ // offizielli Resultat lade (Fallback: nüt -> blibt eifach läär)
-    if(!ok)return;
-    renderResStand(); renderSchedule(); renderKO();
-    if(!userRecalced)deferSim(10000); // Chancene mit de neue fixe Resultat nochrächne
-  });
-  fetchLiveElo().then(ok=>{ // Live-Elo lade (Fallback: iibauti Wert), denn erst simuliere
-    if(userRecalced)return; // de Benutzer hät inzwüsche scho selber frisch grechnet
+  // Live-Date (Elo + offizielli Resultat) parallel lade, denn automatisch EI Mal simuliere.
+  // So aktualisiere sich Tabelle & Chance vo sälber us de täglich gholte Resultat — kei Knopf nötig.
+  Promise.all([
+    fetchLiveResults().catch(()=>false),  // offizielli Resultat (Fallback: nüt -> blibt läär)
+    fetchLiveElo().catch(()=>false)        // Live-Elo (Fallback: iibauti Wert)
+  ]).then(([resOk])=>{
+    if(resOk)renderResStand();
     const ae=document.activeElement;
-    if(ok&&!(ae&&ae.dataset&&ae.dataset.id))renderSchedule(); // nöd während em Tippe drirendere
-    deferSim(10000);       // erste Chancen im Hintergrund (Button rechnet 50'000)
+    if(!(ae&&ae.dataset&&(ae.dataset.id||ae.dataset.koid))){ renderSchedule(); renderKO(); } // nöd während em Tippe drirendere
+    deferSim(SIM_N);   // Chancene im Hintergrund rechne (blockiert s Tippe nöd)
   });
 })();
 </script>
