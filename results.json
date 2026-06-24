@@ -1,5 +1,246 @@
 {
- "updated": "2026-06-19",
+ "updated": "2026-06-24",
  "source": "football-data.org",
- "results": {}
+ "results": {
+  "Algeria|Argentina|grp": {
+   "home": "Argentina",
+   "hs": 3,
+   "as": 0
+  },
+  "Algeria|Jordan|grp": {
+   "home": "Jordan",
+   "hs": 1,
+   "as": 2
+  },
+  "Argentina|Austria|grp": {
+   "home": "Argentina",
+   "hs": 2,
+   "as": 0
+  },
+  "Australia|Turkiye|grp": {
+   "home": "Australia",
+   "hs": 2,
+   "as": 0
+  },
+  "Australia|USA|grp": {
+   "home": "USA",
+   "hs": 2,
+   "as": 0
+  },
+  "Austria|Jordan|grp": {
+   "home": "Austria",
+   "hs": 3,
+   "as": 1
+  },
+  "Belgium|Egypt|grp": {
+   "home": "Belgium",
+   "hs": 1,
+   "as": 1
+  },
+  "Belgium|Iran|grp": {
+   "home": "Belgium",
+   "hs": 0,
+   "as": 0
+  },
+  "Bosnia|Canada|grp": {
+   "home": "Canada",
+   "hs": 1,
+   "as": 1
+  },
+  "Bosnia|Switzerland|grp": {
+   "home": "Switzerland",
+   "hs": 4,
+   "as": 1
+  },
+  "Brazil|Haiti|grp": {
+   "home": "Brazil",
+   "hs": 3,
+   "as": 0
+  },
+  "Brazil|Morocco|grp": {
+   "home": "Brazil",
+   "hs": 1,
+   "as": 1
+  },
+  "Canada|Qatar|grp": {
+   "home": "Canada",
+   "hs": 6,
+   "as": 0
+  },
+  "CapeVerde|Spain|grp": {
+   "home": "Spain",
+   "hs": 0,
+   "as": 0
+  },
+  "CapeVerde|Uruguay|grp": {
+   "home": "Uruguay",
+   "hs": 2,
+   "as": 2
+  },
+  "Colombia|DRCongo|grp": {
+   "home": "Colombia",
+   "hs": 1,
+   "as": 0
+  },
+  "Colombia|Uzbekistan|grp": {
+   "home": "Uzbekistan",
+   "hs": 1,
+   "as": 3
+  },
+  "Croatia|England|grp": {
+   "home": "England",
+   "hs": 4,
+   "as": 2
+  },
+  "Croatia|Panama|grp": {
+   "home": "Panama",
+   "hs": 0,
+   "as": 1
+  },
+  "Curacao|Ecuador|grp": {
+   "home": "Ecuador",
+   "hs": 0,
+   "as": 0
+  },
+  "Curacao|Germany|grp": {
+   "home": "Germany",
+   "hs": 7,
+   "as": 1
+  },
+  "Czechia|SouthAfrica|grp": {
+   "home": "Czechia",
+   "hs": 1,
+   "as": 1
+  },
+  "Czechia|SouthKorea|grp": {
+   "home": "SouthKorea",
+   "hs": 2,
+   "as": 1
+  },
+  "DRCongo|Portugal|grp": {
+   "home": "Portugal",
+   "hs": 1,
+   "as": 1
+  },
+  "Ecuador|IvoryCoast|grp": {
+   "home": "IvoryCoast",
+   "hs": 1,
+   "as": 0
+  },
+  "Egypt|NewZealand|grp": {
+   "home": "NewZealand",
+   "hs": 1,
+   "as": 3
+  },
+  "England|Ghana|grp": {
+   "home": "England",
+   "hs": 0,
+   "as": 0
+  },
+  "France|Iraq|grp": {
+   "home": "France",
+   "hs": 3,
+   "as": 0
+  },
+  "France|Senegal|grp": {
+   "home": "France",
+   "hs": 3,
+   "as": 1
+  },
+  "Germany|IvoryCoast|grp": {
+   "home": "Germany",
+   "hs": 2,
+   "as": 1
+  },
+  "Ghana|Panama|grp": {
+   "home": "Ghana",
+   "hs": 1,
+   "as": 0
+  },
+  "Haiti|Scotland|grp": {
+   "home": "Haiti",
+   "hs": 0,
+   "as": 1
+  },
+  "Iran|NewZealand|grp": {
+   "home": "Iran",
+   "hs": 2,
+   "as": 2
+  },
+  "Iraq|Norway|grp": {
+   "home": "Iraq",
+   "hs": 1,
+   "as": 4
+  },
+  "Japan|Netherlands|grp": {
+   "home": "Netherlands",
+   "hs": 2,
+   "as": 2
+  },
+  "Japan|Tunisia|grp": {
+   "home": "Tunisia",
+   "hs": 0,
+   "as": 4
+  },
+  "Mexico|SouthAfrica|grp": {
+   "home": "Mexico",
+   "hs": 2,
+   "as": 0
+  },
+  "Mexico|SouthKorea|grp": {
+   "home": "Mexico",
+   "hs": 1,
+   "as": 0
+  },
+  "Morocco|Scotland|grp": {
+   "home": "Scotland",
+   "hs": 0,
+   "as": 1
+  },
+  "Netherlands|Sweden|grp": {
+   "home": "Netherlands",
+   "hs": 5,
+   "as": 1
+  },
+  "Norway|Senegal|grp": {
+   "home": "Norway",
+   "hs": 3,
+   "as": 2
+  },
+  "Paraguay|Turkiye|grp": {
+   "home": "Turkiye",
+   "hs": 0,
+   "as": 1
+  },
+  "Paraguay|USA|grp": {
+   "home": "USA",
+   "hs": 4,
+   "as": 1
+  },
+  "Portugal|Uzbekistan|grp": {
+   "home": "Portugal",
+   "hs": 5,
+   "as": 0
+  },
+  "Qatar|Switzerland|grp": {
+   "home": "Qatar",
+   "hs": 1,
+   "as": 1
+  },
+  "SaudiArabia|Spain|grp": {
+   "home": "Spain",
+   "hs": 4,
+   "as": 0
+  },
+  "SaudiArabia|Uruguay|grp": {
+   "home": "SaudiArabia",
+   "hs": 1,
+   "as": 1
+  },
+  "Sweden|Tunisia|grp": {
+   "home": "Sweden",
+   "hs": 5,
+   "as": 1
+  }
+ }
 }
