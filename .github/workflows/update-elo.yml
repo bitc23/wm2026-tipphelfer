@@ -2,7 +2,8 @@ name: Elo-Update
 
 on:
   schedule:
-    - cron: "30 6 * * *"   # täglich 06:30 UTC (08:30 CEST) — nach de Nacht-Spiel in Nordamerika
+    - cron: "30 3 * * *"   # 03:30 UTC geplant (GitHub lauft typisch 3-6h spöter). Früeh aagsetzt,
+                           # damit de verzögerti Lauf am Morge landet — und vor em Resultat-Update (04:00 UTC).
   workflow_dispatch:        # manuell uslösbar im Actions-Tab
 
 permissions:

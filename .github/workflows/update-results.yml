@@ -2,7 +2,9 @@ name: Resultat-Update
 
 on:
   schedule:
-    - cron: "0 7 * * *"    # täglich 07:00 UTC (09:00 CEST) — nach de Nacht-Spiel in Nordamerika
+    - cron: "0 4 * * *"    # 04:00 UTC geplant. GitHub-Scheduler lauft aber typisch 3-6h spöter,
+                           # drum früeh aagsetzt, damit de verzögerti Lauf am spöte Morge (CEST) landet.
+                           # Mues nach em Elo-Lauf (03:30 UTC) und nach de letschte Nacht-Spiel si.
   workflow_dispatch:        # manuell uslösbar im Actions-Tab
 
 permissions:
