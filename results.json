@@ -1,5 +1,5 @@
 {
- "updated": "2026-06-24",
+ "updated": "2026-06-25",
  "source": "football-data.org",
  "results": {
   "Algeria|Argentina|grp": {
@@ -47,6 +47,11 @@
    "hs": 1,
    "as": 1
   },
+  "Bosnia|Qatar|grp": {
+   "home": "Bosnia",
+   "hs": 3,
+   "as": 1
+  },
   "Bosnia|Switzerland|grp": {
    "home": "Switzerland",
    "hs": 4,
@@ -62,10 +67,20 @@
    "hs": 1,
    "as": 1
   },
+  "Brazil|Scotland|grp": {
+   "home": "Scotland",
+   "hs": 0,
+   "as": 3
+  },
   "Canada|Qatar|grp": {
    "home": "Canada",
    "hs": 6,
    "as": 0
+  },
+  "Canada|Switzerland|grp": {
+   "home": "Switzerland",
+   "hs": 2,
+   "as": 1
   },
   "CapeVerde|Spain|grp": {
    "home": "Spain",
@@ -106,6 +121,11 @@
    "home": "Germany",
    "hs": 7,
    "as": 1
+  },
+  "Czechia|Mexico|grp": {
+   "home": "Czechia",
+   "hs": 0,
+   "as": 3
   },
   "Czechia|SouthAfrica|grp": {
    "home": "Czechia",
@@ -156,6 +176,11 @@
    "home": "Ghana",
    "hs": 1,
    "as": 0
+  },
+  "Haiti|Morocco|grp": {
+   "home": "Morocco",
+   "hs": 4,
+   "as": 2
   },
   "Haiti|Scotland|grp": {
    "home": "Haiti",
@@ -236,6 +261,11 @@
    "home": "SaudiArabia",
    "hs": 1,
    "as": 1
+  },
+  "SouthAfrica|SouthKorea|grp": {
+   "home": "SouthAfrica",
+   "hs": 1,
+   "as": 0
   },
   "Sweden|Tunisia|grp": {
    "home": "Sweden",
