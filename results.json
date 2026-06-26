@@ -1,5 +1,5 @@
 {
- "updated": "2026-06-25",
+ "updated": "2026-06-26",
  "source": "football-data.org",
  "results": {
   "Algeria|Argentina|grp": {
@@ -15,6 +15,11 @@
   "Argentina|Austria|grp": {
    "home": "Argentina",
    "hs": 2,
+   "as": 0
+  },
+  "Australia|Paraguay|grp": {
+   "home": "Paraguay",
+   "hs": 0,
    "as": 0
   },
   "Australia|Turkiye|grp": {
@@ -122,6 +127,11 @@
    "hs": 7,
    "as": 1
   },
+  "Curacao|IvoryCoast|grp": {
+   "home": "Curacao",
+   "hs": 0,
+   "as": 2
+  },
   "Czechia|Mexico|grp": {
    "home": "Czechia",
    "hs": 0,
@@ -140,6 +150,11 @@
   "DRCongo|Portugal|grp": {
    "home": "Portugal",
    "hs": 1,
+   "as": 1
+  },
+  "Ecuador|Germany|grp": {
+   "home": "Ecuador",
+   "hs": 2,
    "as": 1
   },
   "Ecuador|IvoryCoast|grp": {
@@ -202,6 +217,11 @@
    "hs": 2,
    "as": 2
   },
+  "Japan|Sweden|grp": {
+   "home": "Japan",
+   "hs": 1,
+   "as": 1
+  },
   "Japan|Tunisia|grp": {
    "home": "Tunisia",
    "hs": 0,
@@ -226,6 +246,11 @@
    "home": "Netherlands",
    "hs": 5,
    "as": 1
+  },
+  "Netherlands|Tunisia|grp": {
+   "home": "Tunisia",
+   "hs": 1,
+   "as": 3
   },
   "Norway|Senegal|grp": {
    "home": "Norway",
@@ -271,9 +296,23 @@
    "home": "Sweden",
    "hs": 5,
    "as": 1
+  },
+  "Turkiye|USA|grp": {
+   "home": "Turkiye",
+   "hs": 3,
+   "as": 2
   }
  },
- "ko_pairs": {},
+ "ko_pairs": {
+  "73": {
+   "a": "SouthAfrica",
+   "b": "Canada"
+  },
+  "81": {
+   "a": "USA",
+   "b": "Bosnia"
+  }
+ },
  "model_tips": {
   "Algeria|Argentina|grp": [
    3,
