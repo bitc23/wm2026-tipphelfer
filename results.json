@@ -1,5 +1,5 @@
 {
- "updated": "2026-06-26",
+ "updated": "2026-06-27",
  "source": "football-data.org",
  "results": {
   "Algeria|Argentina|grp": {
@@ -47,6 +47,11 @@
    "hs": 0,
    "as": 0
   },
+  "Belgium|NewZealand|grp": {
+   "home": "NewZealand",
+   "hs": 1,
+   "as": 5
+  },
   "Bosnia|Canada|grp": {
    "home": "Canada",
    "hs": 1,
@@ -86,6 +91,11 @@
    "home": "Switzerland",
    "hs": 2,
    "as": 1
+  },
+  "CapeVerde|SaudiArabia|grp": {
+   "home": "CapeVerde",
+   "hs": 0,
+   "as": 0
   },
   "CapeVerde|Spain|grp": {
    "home": "Spain",
@@ -162,6 +172,11 @@
    "hs": 1,
    "as": 0
   },
+  "Egypt|Iran|grp": {
+   "home": "Egypt",
+   "hs": 1,
+   "as": 1
+  },
   "Egypt|NewZealand|grp": {
    "home": "NewZealand",
    "hs": 1,
@@ -176,6 +191,11 @@
    "home": "France",
    "hs": 3,
    "as": 0
+  },
+  "France|Norway|grp": {
+   "home": "Norway",
+   "hs": 1,
+   "as": 4
   },
   "France|Senegal|grp": {
    "home": "France",
@@ -211,6 +231,11 @@
    "home": "Iraq",
    "hs": 1,
    "as": 4
+  },
+  "Iraq|Senegal|grp": {
+   "home": "Senegal",
+   "hs": 5,
+   "as": 0
   },
   "Japan|Netherlands|grp": {
    "home": "Netherlands",
@@ -291,6 +316,11 @@
    "home": "SouthAfrica",
    "hs": 1,
    "as": 0
+  },
+  "Spain|Uruguay|grp": {
+   "home": "Uruguay",
+   "hs": 0,
+   "as": 1
   },
   "Sweden|Tunisia|grp": {
    "home": "Sweden",
