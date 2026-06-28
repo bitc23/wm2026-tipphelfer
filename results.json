@@ -1,11 +1,16 @@
 {
- "updated": "2026-06-27",
+ "updated": "2026-06-28",
  "source": "football-data.org",
  "results": {
   "Algeria|Argentina|grp": {
    "home": "Argentina",
    "hs": 3,
    "as": 0
+  },
+  "Algeria|Austria|grp": {
+   "home": "Algeria",
+   "hs": 3,
+   "as": 3
   },
   "Algeria|Jordan|grp": {
    "home": "Jordan",
@@ -16,6 +21,11 @@
    "home": "Argentina",
    "hs": 2,
    "as": 0
+  },
+  "Argentina|Jordan|grp": {
+   "home": "Jordan",
+   "hs": 1,
+   "as": 3
   },
   "Australia|Paraguay|grp": {
    "home": "Paraguay",
@@ -112,6 +122,11 @@
    "hs": 1,
    "as": 0
   },
+  "Colombia|Portugal|grp": {
+   "home": "Colombia",
+   "hs": 0,
+   "as": 0
+  },
   "Colombia|Uzbekistan|grp": {
    "home": "Uzbekistan",
    "hs": 1,
@@ -121,6 +136,11 @@
    "home": "England",
    "hs": 4,
    "as": 2
+  },
+  "Croatia|Ghana|grp": {
+   "home": "Croatia",
+   "hs": 2,
+   "as": 1
   },
   "Croatia|Panama|grp": {
    "home": "Panama",
@@ -162,6 +182,11 @@
    "hs": 1,
    "as": 1
   },
+  "DRCongo|Uzbekistan|grp": {
+   "home": "DRCongo",
+   "hs": 3,
+   "as": 1
+  },
   "Ecuador|Germany|grp": {
    "home": "Ecuador",
    "hs": 2,
@@ -186,6 +211,11 @@
    "home": "England",
    "hs": 0,
    "as": 0
+  },
+  "England|Panama|grp": {
+   "home": "Panama",
+   "hs": 0,
+   "as": 2
   },
   "France|Iraq|grp": {
    "home": "France",
@@ -338,9 +368,25 @@
    "a": "SouthAfrica",
    "b": "Canada"
   },
+  "77": {
+   "a": "France",
+   "b": "Sweden"
+  },
+  "78": {
+   "a": "IvoryCoast",
+   "b": "Norway"
+  },
   "81": {
    "a": "USA",
    "b": "Bosnia"
+  },
+  "85": {
+   "a": "Switzerland",
+   "b": "Algeria"
+  },
+  "88": {
+   "a": "Australia",
+   "b": "Egypt"
   }
  },
  "model_tips": {
