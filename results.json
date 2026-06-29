@@ -1,5 +1,5 @@
 {
- "updated": "2026-06-28",
+ "updated": "2026-06-29",
  "source": "football-data.org",
  "results": {
   "Algeria|Argentina|grp": {
@@ -96,6 +96,11 @@
    "home": "Canada",
    "hs": 6,
    "as": 0
+  },
+  "Canada|SouthAfrica|ko": {
+   "home": "SouthAfrica",
+   "hs": 0,
+   "as": 1
   },
   "Canada|Switzerland|grp": {
    "home": "Switzerland",
