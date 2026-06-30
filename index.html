@@ -451,7 +451,7 @@ async function saveResults(){
 /* ===== Offizielli Resultat (results.json, täglich vomene GitHub-Action aktualisiert) =====
    D Tester müend so kei Resultat meh vo Hand iitrage — die werded automatisch gfüllt,
    si tippe nu no sälber. Schlüssel = sortierts Team-Paar + grp/ko (gliich wie update-results.mjs). */
-let OFFICIAL=null, KOFEED=null, FROZEN=null, resStand=null;
+let OFFICIAL=null, KOFEED=null, FROZEN=null, KOFROZEN=null, resStand=null;
 function pairKey(a,b,ko){return [a,b].sort().join("|")+"|"+(ko?"ko":"grp");}
 function validRes(o){return o&&Number.isInteger(o.hs)&&Number.isInteger(o.as);}
 function applyOfficial(){
@@ -479,6 +479,7 @@ async function fetchLiveResults(){
     OFFICIAL=data.results;
     KOFEED=(data.ko_pairs&&typeof data.ko_pairs==="object")?data.ko_pairs:{};
     FROZEN=(data.model_tips&&typeof data.model_tips==="object")?data.model_tips:{};
+    KOFROZEN=(data.ko_model_tips&&typeof data.ko_model_tips==="object")?data.ko_model_tips:{};
     resStand=typeof data.updated==="string"&&/^\d{4}-\d{2}-\d{2}$/.test(data.updated)?data.updated:null;
     applyOfficial();
     return true;
@@ -503,6 +504,13 @@ function frozenModelTip(m){
   if(FROZEN&&isLocked(m.dt)){const f=FROZEN[pairKey(m.h,m.a,false)]; if(Array.isArray(f)&&f.length===2)return f;}
   return m.an.tip;
 }
+// Modell-Tipp fürs K.o.-Spiel ta-vs-tb: K.o.-Spiel händ kei fix Datum im Frontend (d Team stahnd
+// erst spöter fest), drum friert results.json hie nöd nach Ziit, sondern sobald s Resultat
+// bekannt isch (gliiche Quelle wie ko_model_tips us update-results.mjs). Susch de Live-Tipp.
+function frozenKoTip(ta,tb,mat){
+  if(KOFROZEN){const f=KOFROZEN[pairKey(ta,tb,true)]; if(Array.isArray(f)&&f.length===2)return f;}
+  return koTip(mat);
+}
 function teamHTML(k){return `<span class="team" data-team="${k}"><span class="fl">${FLAG[k]}</span>${NAME[k]}</span>`;}
 function num(v){return v===""||v==null?null:Math.max(0,Math.min(30,parseInt(v,10)));}
 
@@ -516,7 +524,7 @@ function updateScoreboard(){
   for(const m of KO){const r=KR[m.id]; if(!r||r.rh==null||r.ra==null)continue;
     if(r.th!=null&&r.ta!=null){total+=ptsKO(r.th,r.ta,r.rh,r.ra);cnt++;}
     const ta=teamInMatch(m.id,"A"),tb=teamInMatch(m.id,"B");
-    if(ta&&tb){const tp=koTip(buildMatrix(ta,tb));mTotal+=ptsKO(tp[0],tp[1],r.rh,r.ra);mCnt++;}
+    if(ta&&tb){const tp=frozenKoTip(ta,tb,buildMatrix(ta,tb));mTotal+=ptsKO(tp[0],tp[1],r.rh,r.ra);mCnt++;}
   }
   document.getElementById("sbTotal").textContent=total;
   document.getElementById("sbCount").textContent=cnt+" / 104";
@@ -953,7 +961,7 @@ function renderKO(){
       const ta=teamInMatch(m.id,"A"),tb=teamInMatch(m.id,"B"),r=KR[m.id]||{};
       const sideHTML=function(slot,team){return team?teamHTML(team):'<span class="team ko-ph">'+phLabel(slot,m.id)+'</span>';};
       let meta="";
-      if(ta&&tb){const mat=buildMatrix(ta,tb),A=analyse(mat),tot=A.pw+A.pd+A.pl,tp=koTip(mat);
+      if(ta&&tb){const mat=buildMatrix(ta,tb),A=analyse(mat),tot=A.pw+A.pd+A.pl,tp=frozenKoTip(ta,tb,mat);
         meta='<div class="m-meta"><span class="pred">Modell <b>'+A.modal[0]+':'+A.modal[1]+'</b> · '+Math.round(100*A.pw/tot)+'/'+Math.round(100*A.pd/tot)+'/'+Math.round(100*A.pl/tot)+'%</span>'
         +'<span class="tip">Tipp <b>'+tp[0]+':'+tp[1]+'</b><span class="copytip" data-kocopy="'+m.id+'" data-th="'+tp[0]+'" data-ta="'+tp[1]+'">▣</span></span></div>';
       }

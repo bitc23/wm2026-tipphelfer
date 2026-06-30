@@ -205,6 +205,26 @@ function buildKoPairs(matches, positions) {
   return { pairs, ambiguous };
 }
 
+// Sammli ALLI K.o.-Spiel-Paarige (jedi Rundi, nöd nur LAST_32) für s Modell-Tipp-Iifriere.
+// Anders als buildKoPairs/mapKoR32 (wo de FIFA-Bracket-Slot eindütig zueordne mues) bruucht das
+// da nume s Team-Paar — drum kei Gruppe-/Tiebreaker-Logik nötig, nu d Team-Name vo de API.
+function extractKoTeamPairs(matches) {
+  const seen = new Set(), pairs = [];
+  for (const m of matches) {
+    if (!isKnockout(m.stage)) continue;
+    const homeName = m.homeTeam && m.homeTeam.name;
+    const awayName = m.awayTeam && m.awayTeam.name;
+    if (!homeName || !awayName) continue;  // Draw nonig confirmiert -> Platzhalter ignoriere
+    const home = teamKey(homeName), away = teamKey(awayName);
+    if (!home || !away) continue;  // Unbekannti Name werded scho i buildResults gflaggt
+    const key = pairKey(home, away, true);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    pairs.push({ home, away });
+  }
+  return pairs;
+}
+
 async function fetchMatches() {
   const res = await fetch(API_URL, {
     headers: { "X-Auth-Token": TOKEN },
@@ -322,6 +342,26 @@ function buildModelTips(prev) {
   return tips;
 }
 
+// ===== K.O.-Modell-Tipp iifriere =====
+// K.o.-Spiel händ (anders als Gruppespiel) kei fix Datum im Frontend — wele Team gege enand
+// spiele steit easch fest, wenn de Bracket sich fülld. Drum friere mer hie nöd nach Aapfiffziit
+// i, sondern sobald für das Team-Paar es Resultat i de API erschiint: de letscht "offeni" Tipp-
+// Wärt (vom Lauf devor, won s Spiel no nöd fertig gsi isch) blibt für immer gültig — gliiche
+// Prinzip wie bi de Gruppespiel, nu am Resultat statt am Datum festgmacht.
+function buildKoModelTips(prev, koTeamPairs, results, ratings) {
+  const tips = {};
+  for (const { home, away } of koTeamPairs) {
+    const key = pairKey(home, away, true);
+    if (tips[key]) continue;  // Spiel chunnt z.T. mehrmals i de API-Lischte vor
+    const finished = !!results[key];
+    if (finished && prev[key]) { tips[key] = prev[key]; continue; }  // fertig -> iigfrore lah
+    const rh = ratings[home], ra = ratings[away];
+    if (!Number.isInteger(rh) || !Number.isInteger(ra)) { if (prev[key]) tips[key] = prev[key]; continue; }
+    tips[key] = tipFromRatings(rh, ra);  // no offe (oder Erstlauf) -> mit aktueller Elo berechne
+  }
+  return tips;
+}
+
 function logDiff(results) {
   let old = null;
   try { old = JSON.parse(readFileSync(OUT_FILE, "utf8")).results; } catch (e) { /* no kei results.json */ }
@@ -368,6 +408,17 @@ let prevModelTips = {};
 try { prevModelTips = JSON.parse(readFileSync(OUT_FILE, "utf8")).model_tips || {}; } catch (e) { /* no kei results.json */ }
 const modelTips = buildModelTips(prevModelTips);
 
+let prevKoModelTips = {};
+try { prevKoModelTips = JSON.parse(readFileSync(OUT_FILE, "utf8")).ko_model_tips || {}; } catch (e) { /* no kei results.json */ }
+let koModelTips = prevKoModelTips;
+if (Number.isFinite(MU)) {  // nu wenn d Kalibrierig (vo buildModelTips obe) gladen isch
+  try {
+    const ratings = JSON.parse(readFileSync(ELO_FILE, "utf8")).ratings;
+    const koTeamPairs = extractKoTeamPairs(matches);
+    koModelTips = buildKoModelTips(prevKoModelTips, koTeamPairs, results, ratings);
+  } catch (e) { console.warn("K.o.-Modell-Tipp iifriere übersprunge: " + e.message); }
+}
+
 logDiff(results);
 const sortedResults = {};
 for (const k of Object.keys(results).sort()) sortedResults[k] = results[k];
@@ -375,12 +426,15 @@ const sortedKoPairs = {};
 for (const k of Object.keys(koPairs).sort((a, b) => +a - +b)) sortedKoPairs[k] = koPairs[k];
 const sortedModelTips = {};
 for (const k of Object.keys(modelTips).sort()) sortedModelTips[k] = modelTips[k];
+const sortedKoModelTips = {};
+for (const k of Object.keys(koModelTips).sort()) sortedKoModelTips[k] = koModelTips[k];
 const out = {
   updated: new Date().toISOString().slice(0, 10),
   source: "football-data.org",
   results: sortedResults,
   ko_pairs: sortedKoPairs,
-  model_tips: sortedModelTips
+  model_tips: sortedModelTips,
+  ko_model_tips: sortedKoModelTips
 };
 writeFileSync(OUT_FILE, JSON.stringify(out, null, 1) + "\n");
-console.log(`results.json aktualisiert (${Object.keys(sortedResults).length} gspilti Spiel, ${Object.keys(sortedKoPairs).length} R32-Paarige, ${Object.keys(sortedModelTips).length} Modell-Tipps).`);
+console.log(`results.json aktualisiert (${Object.keys(sortedResults).length} gspilti Spiel, ${Object.keys(sortedKoPairs).length} R32-Paarige, ${Object.keys(sortedModelTips).length} Modell-Tipps, ${Object.keys(sortedKoModelTips).length} K.o.-Modell-Tipps).`);
