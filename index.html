@@ -977,9 +977,9 @@ function renderKO(){
         adv='<div class="ko-adv"><span class="lbl">Penalty →</span>'
           +(advName?'<span class="ko-advwin">'+advName+' witer</span>':'<span class="muted2">no offe</span>')+'</div>';
       }
-      html+='<div class="match"><div class="m-head"><span class="m-time"><span class="ko-num">M'+m.id+'</span></span>'
-        +'<div class="m-teams">'+sideHTML(m.A,ta)+'<span class="vs">vs</span>'+sideHTML(m.B,tb)+'</div></div>'
-        +meta
+      html+='<div class="match"><div class="m-time"><span class="ko-num">M'+m.id+'</span></div>'
+        +'<div class="m-main"><div class="m-teams">'+sideHTML(m.A,ta)+'<span class="vs">vs</span>'+sideHTML(m.B,tb)+'</div>'
+        +meta+'</div>'
         +'<div class="m-entry"><div class="eblock tip"><span class="elbl t">Tipp</span>'
         +'<input type="number" inputmode="numeric" data-koid="'+m.id+'" data-k="th" value="'+(r.th!=null?r.th:"")+'" placeholder="–"><span class="dash">:</span>'
         +'<input type="number" inputmode="numeric" data-koid="'+m.id+'" data-k="ta" value="'+(r.ta!=null?r.ta:"")+'" placeholder="–"></div>'
