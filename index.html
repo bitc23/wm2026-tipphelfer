@@ -77,6 +77,7 @@
   .grp-badge{font-family:var(--mono); font-size:10px; font-weight:700; color:var(--lime-dim); border:1px solid var(--line); border-radius:5px; padding:1px 5px}
   .m-meta{display:flex; gap:6px 14px; flex-wrap:wrap; margin-top:6px; font-size:11.5px; color:var(--muted)}
   .m-meta .pred b{color:var(--ink); font-family:var(--mono)}
+  .m-meta .prob{color:var(--muted2); font-family:var(--mono)}
   .m-meta .tip{color:var(--lime-dim)} .m-meta .tip b{color:var(--lime); font-family:var(--mono)}
   .m-meta .h2h{color:var(--muted2)}
   .copytip{cursor:pointer; border:1px solid var(--line); background:var(--card2); color:var(--lime-dim); border-radius:6px; font-family:var(--mono); font-size:10px; padding:1px 6px; margin-left:2px}
@@ -239,7 +240,8 @@
 
   <!-- KO -->
   <section id="view-ko" class="hidden">
-    <div class="note lime"><b>K.o.-Phase:</b> D Paarige fülled sich automatisch us de Tabelle — Gruppe-Sieger &amp; Zwöiti sobald e Gruppe fertig gspilt isch, die 8 beschte Dritte sobald <b>alli</b> Gruppe durch sind (exakt nach FIFA Annex C, 495 Kombinatione). Tipp = Stand nach 120 Min (ohni Penaltyschiesse). S <b>Resultat</b> und (bi Unentschiede) wer per Penalty wiiterchunnt, fülled sich automatisch us de offizielle Spiel — s Bracket lauft vo sälber witer. Punkt: richtige Sieger/Tendenz <b>10</b> · jedi exakti Goal-Zahl <b>+2</b> · richtigi Goal-Differänz <b>+6</b> (exakt = 20).</div>
+    <div class="note lime"><b>K.o.-Phase:</b> D Paarige fülled sich automatisch us de Tabelle — Gruppe-Sieger &amp; Zwöiti sobald e Gruppe fertig gspilt isch, die 8 beschte Dritte sobald <b>alli</b> Gruppe durch sind (exakt nach FIFA Annex C, 495 Kombinatione). Tipp = Stand nach 120 Min (ohni Penaltyschiesse). S <b>Resultat</b> und (bi Unentschiede) wer per Penalty wiiterchunnt, fülled sich automatisch us de offizielle Spiel — s Bracket lauft vo sälber witer. Punkt: richtige Sieger/Tendenz <b>10</b> · jedi exakti Goal-Zahl <b>+2</b> · richtigi Goal-Differänz <b>+6</b> (exakt = 20).
+      <br><b>Zahle pro Spiel:</b> «<b>Whrschlechsts</b> X:Y» = s einzelne Resultat mit de höchschte Wahrschindlichkeit im Modell. D drü Prozentzahle drnäbe (Flagge/⚖️/Flagge) sind d Sieg-/Remis-/Sieg-Wahrschindlichkeit. «<b>Tipp</b>» drunder isch en andere Wärt — gerundeti erwarteti Goals, wo im Backtest am meischte Pünkt bringt — drum stimmt s meischtens nöd mit em «Whrschlechsts»-Resultat überii. Mit ▣ übernimmsch de Tipp-Vorschlag is Tipp-Feld.</div>
     <div id="koBody"></div>
   </section>
 
@@ -962,8 +964,9 @@ function renderKO(){
       const sideHTML=function(slot,team){return team?teamHTML(team):'<span class="team ko-ph">'+phLabel(slot,m.id)+'</span>';};
       let meta="";
       if(ta&&tb){const mat=buildMatrix(ta,tb),A=analyse(mat),tot=A.pw+A.pd+A.pl,tp=frozenKoTip(ta,tb,mat);
-        meta='<div class="m-meta"><span class="pred">Modell <b>'+A.modal[0]+':'+A.modal[1]+'</b> · '+Math.round(100*A.pw/tot)+'/'+Math.round(100*A.pd/tot)+'/'+Math.round(100*A.pl/tot)+'%</span>'
-        +'<span class="tip">Tipp <b>'+tp[0]+':'+tp[1]+'</b><span class="copytip" data-kocopy="'+m.id+'" data-th="'+tp[0]+'" data-ta="'+tp[1]+'">▣</span></span></div>';
+        meta='<div class="m-meta"><span class="pred" title="Wahrscheinlechsts Einzelresultat (höchschti Wahrschindlichkeit vo allne mögleche Resultat) — nöd s Gliiche wie de Tipp-Vorschlag rächts">Whrschlechsts <b>'+A.modal[0]+':'+A.modal[1]+'</b></span>'
+        +'<span class="prob" title="Sieg-/Remis-Wahrschindlichkeit us de Modell-Verteilig: '+FLAG[ta]+' '+NAME[ta]+' / Remis / '+FLAG[tb]+' '+NAME[tb]+'">'+FLAG[ta]+' '+Math.round(100*A.pw/tot)+'% · ⚖️ '+Math.round(100*A.pd/tot)+'% · '+FLAG[tb]+' '+Math.round(100*A.pl/tot)+'%</span>'
+        +'<span class="tip" title="Tipp-Vorschlag = gerundeti erwarteti Goals. Bringt im Backtest am meischte Pünkt — drum oft anders als s wahrscheinlechschte Einzelresultat links">Tipp <b>'+tp[0]+':'+tp[1]+'</b><span class="copytip" data-kocopy="'+m.id+'" data-th="'+tp[0]+'" data-ta="'+tp[1]+'">▣</span></span></div>';
       }
       let pt="",ptcls="empty";const haveRes=(r.rh!=null&&r.ra!=null);
       if(r.th!=null&&r.ta!=null&&haveRes){const gp=ptsKO(r.th,r.ta,r.rh,r.ra);pt="+"+gp+" P";ptcls=gp>0?"":"zero";}
