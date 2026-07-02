@@ -1,5 +1,5 @@
 {
- "updated": "2026-07-01",
+ "updated": "2026-07-02",
  "source": "football-data.org",
  "results": {
   "Algeria|Argentina|grp": {
@@ -62,6 +62,11 @@
    "hs": 1,
    "as": 5
   },
+  "Belgium|Senegal|ko": {
+   "home": "Belgium",
+   "hs": 3,
+   "as": 2
+  },
   "Bosnia|Canada|grp": {
    "home": "Canada",
    "hs": 1,
@@ -76,6 +81,11 @@
    "home": "Switzerland",
    "hs": 4,
    "as": 1
+  },
+  "Bosnia|USA|ko": {
+   "home": "USA",
+   "hs": 2,
+   "as": 0
   },
   "Brazil|Haiti|grp": {
    "home": "Brazil",
@@ -184,6 +194,11 @@
   },
   "Czechia|SouthKorea|grp": {
    "home": "SouthKorea",
+   "hs": 2,
+   "as": 1
+  },
+  "DRCongo|England|ko": {
+   "home": "England",
    "hs": 2,
    "as": 1
   },
@@ -737,6 +752,10 @@
    1,
    1
   ],
+  "Belgium|USA|ko": [
+   1,
+   2
+  ],
   "Bosnia|USA|ko": [
    2,
    1
@@ -772,6 +791,10 @@
   "Ecuador|Mexico|ko": [
    1,
    1
+  ],
+  "England|Mexico|ko": [
+   1,
+   2
   ],
   "France|Paraguay|ko": [
    1,
