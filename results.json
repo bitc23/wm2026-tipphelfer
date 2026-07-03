@@ -1,5 +1,5 @@
 {
- "updated": "2026-07-02",
+ "updated": "2026-07-03",
  "source": "football-data.org",
  "results": {
   "Algeria|Argentina|grp": {
@@ -16,6 +16,11 @@
    "home": "Jordan",
    "hs": 1,
    "as": 2
+  },
+  "Algeria|Switzerland|ko": {
+   "home": "Switzerland",
+   "hs": 2,
+   "as": 0
   },
   "Argentina|Austria|grp": {
    "home": "Argentina",
@@ -46,6 +51,11 @@
    "home": "Austria",
    "hs": 3,
    "as": 1
+  },
+  "Austria|Spain|ko": {
+   "home": "Spain",
+   "hs": 3,
+   "as": 0
   },
   "Belgium|Egypt|grp": {
    "home": "Belgium",
@@ -165,6 +175,11 @@
   "Croatia|Panama|grp": {
    "home": "Panama",
    "hs": 0,
+   "as": 1
+  },
+  "Croatia|Portugal|ko": {
+   "home": "Portugal",
+   "hs": 2,
    "as": 1
   },
   "Curacao|Ecuador|grp": {
