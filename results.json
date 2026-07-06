@@ -1,5 +1,5 @@
 {
- "updated": "2026-07-05",
+ "updated": "2026-07-06",
  "source": "football-data.org",
  "results": {
   "Algeria|Argentina|grp": {
@@ -122,6 +122,11 @@
    "home": "Brazil",
    "hs": 1,
    "as": 1
+  },
+  "Brazil|Norway|ko": {
+   "home": "Brazil",
+   "hs": 1,
+   "as": 2
   },
   "Brazil|Scotland|grp": {
    "home": "Scotland",
@@ -277,6 +282,11 @@
    "home": "England",
    "hs": 0,
    "as": 0
+  },
+  "England|Mexico|ko": {
+   "home": "Mexico",
+   "hs": 2,
+   "as": 3
   },
   "England|Panama|grp": {
    "home": "Panama",
@@ -844,6 +854,10 @@
   "England|Mexico|ko": [
    1,
    2
+  ],
+  "England|Norway|ko": [
+   1,
+   1
   ],
   "France|Morocco|ko": [
    2,
