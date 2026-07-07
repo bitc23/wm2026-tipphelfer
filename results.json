@@ -1,5 +1,5 @@
 {
- "updated": "2026-07-06",
+ "updated": "2026-07-07",
  "source": "football-data.org",
  "results": {
   "Algeria|Argentina|grp": {
@@ -87,6 +87,11 @@
    "home": "Belgium",
    "hs": 3,
    "as": 2
+  },
+  "Belgium|USA|ko": {
+   "home": "USA",
+   "hs": 1,
+   "as": 4
   },
   "Bosnia|Canada|grp": {
    "home": "Canada",
@@ -423,6 +428,11 @@
   "Paraguay|USA|grp": {
    "home": "USA",
    "hs": 4,
+   "as": 1
+  },
+  "Portugal|Spain|ko": {
+   "home": "Portugal",
+   "hs": 0,
    "as": 1
   },
   "Portugal|Uzbekistan|grp": {
@@ -807,6 +817,10 @@
    1,
    1
   ],
+  "Belgium|Spain|ko": [
+   2,
+   1
+  ],
   "Belgium|USA|ko": [
    1,
    2
@@ -857,7 +871,7 @@
   ],
   "England|Norway|ko": [
    1,
-   1
+   2
   ],
   "France|Morocco|ko": [
    2,
