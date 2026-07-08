@@ -1,5 +1,5 @@
 {
- "updated": "2026-07-07",
+ "updated": "2026-07-08",
  "source": "football-data.org",
  "results": {
   "Algeria|Argentina|grp": {
@@ -28,6 +28,11 @@
    "as": 0
   },
   "Argentina|CapeVerde|ko": {
+   "home": "Argentina",
+   "hs": 3,
+   "as": 2
+  },
+  "Argentina|Egypt|ko": {
    "home": "Argentina",
    "hs": 3,
    "as": 2
@@ -187,6 +192,12 @@
    "home": "Colombia",
    "hs": 0,
    "as": 0
+  },
+  "Colombia|Switzerland|ko": {
+   "home": "Switzerland",
+   "hs": 4,
+   "as": 3,
+   "pens": "home"
   },
   "Colombia|Uzbekistan|grp": {
    "home": "Uzbekistan",
@@ -803,6 +814,10 @@
   ],
   "Argentina|Egypt|ko": [
    3,
+   1
+  ],
+  "Argentina|Switzerland|ko": [
+   2,
    1
   ],
   "Australia|Egypt|ko": [
