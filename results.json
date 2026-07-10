@@ -1,5 +1,5 @@
 {
- "updated": "2026-07-09",
+ "updated": "2026-07-10",
  "source": "football-data.org",
  "results": {
   "Algeria|Argentina|grp": {
@@ -312,6 +312,11 @@
   "France|Iraq|grp": {
    "home": "France",
    "hs": 3,
+   "as": 0
+  },
+  "France|Morocco|ko": {
+   "home": "France",
+   "hs": 2,
    "as": 0
   },
   "France|Norway|grp": {
