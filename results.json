@@ -1,5 +1,5 @@
 {
- "updated": "2026-07-10",
+ "updated": "2026-07-11",
  "source": "football-data.org",
  "results": {
   "Algeria|Argentina|grp": {
@@ -92,6 +92,11 @@
    "home": "Belgium",
    "hs": 3,
    "as": 2
+  },
+  "Belgium|Spain|ko": {
+   "home": "Spain",
+   "hs": 2,
+   "as": 1
   },
   "Belgium|USA|ko": {
    "home": "USA",
@@ -900,6 +905,10 @@
   "France|Paraguay|ko": [
    1,
    2
+  ],
+  "France|Spain|ko": [
+   1,
+   1
   ],
   "France|Sweden|ko": [
    3,
