@@ -1,9 +1,9 @@
 {
- "updated": "2026-07-14",
+ "updated": "2026-07-15",
  "source": "eloratings.net",
  "ratings": {
   "Mexico": 1913,
-  "SouthAfrica": 1559,
+  "SouthAfrica": 1560,
   "SouthKorea": 1723,
   "Czechia": 1680,
   "Canada": 1729,
@@ -30,11 +30,11 @@
   "Egypt": 1742,
   "Iran": 1764,
   "NewZealand": 1534,
-  "Spain": 2190,
+  "Spain": 2232,
   "CapeVerde": 1619,
   "SaudiArabia": 1596,
   "Uruguay": 1841,
-  "France": 2163,
+  "France": 2121,
   "Senegal": 1816,
   "Iraq": 1561,
   "Norway": 1951,
@@ -47,7 +47,7 @@
   "Uzbekistan": 1631,
   "Colombia": 2003,
   "England": 2097,
-  "Croatia": 1881,
+  "Croatia": 1882,
   "Ghana": 1570,
   "Panama": 1658
  }
