@@ -1,5 +1,5 @@
 {
- "updated": "2026-07-18",
+ "updated": "2026-07-19",
  "source": "football-data.org",
  "results": {
   "Algeria|Argentina|grp": {
@@ -308,6 +308,11 @@
    "home": "NewZealand",
    "hs": 1,
    "as": 3
+  },
+  "England|France|ko": {
+   "home": "France",
+   "hs": 4,
+   "as": 6
   },
   "England|Ghana|grp": {
    "home": "England",
