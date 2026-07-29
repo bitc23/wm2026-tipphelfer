@@ -1,9 +1,9 @@
 {
- "updated": "2026-07-28",
+ "updated": "2026-07-29",
  "source": "eloratings.net",
  "ratings": {
   "Mexico": 1913,
-  "SouthAfrica": 1559,
+  "SouthAfrica": 1560,
   "SouthKorea": 1723,
   "Czechia": 1680,
   "Canada": 1729,
@@ -20,13 +20,13 @@
   "Turkiye": 1852,
   "Germany": 1908,
   "Curacao": 1438,
-  "IvoryCoast": 1727,
+  "IvoryCoast": 1728,
   "Ecuador": 1871,
   "Netherlands": 1971,
   "Japan": 1888,
   "Sweden": 1731,
   "Tunisia": 1562,
-  "Belgium": 1948,
+  "Belgium": 1947,
   "Egypt": 1742,
   "Iran": 1764,
   "NewZealand": 1534,
@@ -44,11 +44,11 @@
   "Jordan": 1628,
   "Portugal": 1995,
   "DRCongo": 1704,
-  "Uzbekistan": 1631,
+  "Uzbekistan": 1630,
   "Colombia": 2003,
   "England": 2125,
-  "Croatia": 1882,
-  "Ghana": 1570,
+  "Croatia": 1881,
+  "Ghana": 1571,
   "Panama": 1658
  }
 }
